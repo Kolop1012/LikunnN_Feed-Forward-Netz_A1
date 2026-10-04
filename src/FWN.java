@@ -13,11 +13,6 @@ public class FWN {
     private float AusgabeNeuron = 1f;
 
 
-    public class Neuron{
-        private float wert;
-
-    }
-
     public FWN(int anzahlEingabeneuronen, int anzahlNeuronenVerborgeneSchicht, int anzahlAusgabeNeuronen, float maximalesGewicht){
         this.maximalesGewicht = maximalesGewicht;
 
