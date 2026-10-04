@@ -54,7 +54,6 @@ public class FWN {
     public float berechneAusgabe(float[] input){
         for(int i = 0; i<EingagbeNeuronen.length; i++){
             EingagbeNeuronen[i] = input[i]*eingabeGewichte[i];
-            //System.out.println("Eingabeneuron Nr. " + (i+1) + " hat den Wert: " + EingagbeNeuronen[i]);
         }
 
 
