@@ -11,7 +11,7 @@ package NeuralNetwork;
  */
 public class FFNeuralNetwork {
 
-    private Layer[] layers;
+    private final Layer[] layers;
 
     /**
      * Erstellt ein neues Feedforward-Netzwerk basierend auf der angegebenen

@@ -11,8 +11,8 @@ import java.util.function.Function;
 
 public class Layer {
 
-    private Neuron[] neurons;
-    private double[][] weights;
+    private final Neuron[] neurons;
+    private final double[][] weights;
 
     /**
      * Erstellt die Eingabeschicht (Input Layer) des neuronalen Netzwerks.
@@ -110,8 +110,5 @@ public class Layer {
     public Neuron[] getNeurons() {
         return neurons;
     }
-
-    public double[][] getWeights() {
-        return weights;
-    }
+    
 }
