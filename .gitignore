@@ -18,6 +18,7 @@ out/
 .project
 .settings/
 .idea/
+.idea
 .kotlin
 *.iml
 *.iws
