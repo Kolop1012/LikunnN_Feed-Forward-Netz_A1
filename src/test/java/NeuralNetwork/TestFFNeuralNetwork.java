@@ -1,3 +1,5 @@
+package NeuralNetwork;
+
 import NeuralNetwork.ActivationFunction;
 import NeuralNetwork.FFNeuralNetwork;
 import org.junit.jupiter.api.BeforeEach;
