@@ -1,0 +1,392 @@
+\section{Theoretische Grundlagen}
+\label{sec:theorie}
+
+\subsection{Was ist ein künstliches neuronales Netz?}
+
+Ein \textbf{künstliches neuronales Netz} (KNN, engl.\ \emph{artificial neural network}, ANN) ist ein mathematisches Modell, das aus vielen einfachen, parallel arbeitenden Recheneinheiten den sogenannten \emph{Neuronen} besteht. Diese sind über gewichtete Verbindungen miteinander verknüpft und verarbeiten gemeinsam Eingabedaten.
+
+Die Grundidee ist, dass ein Netzwerk aus sehr vielen einfachen Einheiten in der Lage ist, komplexe Zusammenhänge zu erlernen, die sich mit klassischen, regelbasierten Verfahren nur schwer erfassen lassen. KNNs sind heute die Grundlage für moderne Verfahren des \emph{Deep Learning} und werden unter anderem eingesetzt für:
+
+\begin{itemize}
+    \item Bild- und Spracherkennung,
+    \item maschinelle Übersetzung,
+    \item Zeitreihenvorhersage,
+    \item medizinische Diagnostik.
+\end{itemize}
+
+Ein KNN „lernt`` nicht durch explizite Programmierung, sondern indem es aus vielen Beispielen Muster extrahiert und seine internen Parameter (Gewichte und Biases) schrittweise anpasst, um einen Fehler zu minimieren.
+
+In diesem Projekt beschäftigen wir uns ausschließlich mit \textbf{Feedforward-Netzen (FNN)}. Andere Architekturen wie Convolutional Neural Networks (CNN), Recurrent Neural Networks (RNN) oder Transformer bauen zwar auf denselben Grundprinzipien auf, haben aber zusätzliche Mechanismen und sind nicht Teil dieser Arbeit.
+
+\subsection{Das künstliche Neuron}
+
+Das Vorbild für das künstliche Neuron ist das biologische Neuron: Dendriten nehmen Signale auf, der Zellkörper summiert sie, und das Axon leitet das Ergebnis weiter. Überschreitet die Summe eine Schwelle, feuert das Neuron. Das künstliche Modell das \emph{Perceptron} \cite{aggarwal2023} greift genau diese Idee auf: Es erhält mehrere Eingaben $x_1, x_2, \dots, x_n$ von der vorherigen Schicht und berechnet daraus einen einzigen Ausgabewert.
+
+Der erste Rechenschritt ist die \textbf{gewichtete Summe} der Eingaben. Jede Eingabe wird mit ihrem persönlichen Gewicht multipliziert und alle Produkte werden aufaddiert. Anschließend wird ein Bias addiert:
+
+\begin{formelbox}
+\begin{equation*}
+    z = \sum_{i=1}^{n} w_i \cdot x_i + b
+\end{equation*}
+\end{formelbox}
+
+Im zweiten Rechenschritt wird die Nettoeingabe $z$ durch eine \textbf{Aktivierungsfunktion} $f$ geleitet:
+
+\begin{formelbox}
+\begin{equation*}
+    a = f(z) = f\left( \sum_{i=1}^{n} w_i \cdot x_i + b \right)
+\end{equation*}
+\end{formelbox}
+
+\paragraph{Numerisches Beispiel.}
+Seien $x_1 = 0{,}5$, $x_2 = 0{,}8$, $w_1 = 0{,}4$, $w_2 = -0{,}6$, $b = 0{,}1$. Dann gilt:
+\[
+    z = 0{,}4 \cdot 0{,}5 + (-0{,}6) \cdot 0{,}8 + 0{,}1 = -0{,}18, \quad a = \max(0,\,-0{,}18) = 0.
+\]
+
+\subsection{Schichten und Architektur}
+
+Neuronen werden in \textbf{Schichten} organisiert. Man unterscheidet \textbf{Eingabeschicht}, \textbf{verborgene Schichten (Hidden Layers)} und \textbf{Ausgabeschicht}. Ein Netz, in dem jede Schicht vollständig mit der nächsten verbunden ist, heißt \emph{fully connected} oder \emph{dense}. Die Gesamtheit aller Gewichte und Biases bildet die \textbf{Parameter} des Netzes.
+
+Den prinzipiellen Aufbau zeigt \autoref{fig:knn_architektur}.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        neuron/.style={circle, draw=black!70, thick, minimum size=8mm, inner sep=0pt, font=\small},
+        input neuron/.style={neuron, fill=green!30},
+        hidden neuron/.style={neuron, fill=orange!35},
+        output neuron/.style={neuron, fill=blue!30},
+        conn/.style={->, >=Stealth, draw=gray!60, shorten >=1.5pt, shorten <=1.5pt, line width=0.4pt},
+        layer label/.style={font=\bfseries\small, text=black!75}
+    ]
+    \foreach \i in {1,...,3} {
+        \node[input neuron] (I-\i) at (0, -\i*1.4) {$x_{\i}$};
+    }
+    \foreach \j in {1,...,4} {
+        \node[hidden neuron] (H1-\j) at (3, -\j*1.4 + 0.7) {};
+    }
+    \foreach \k in {1,...,4} {
+        \node[hidden neuron] (H2-\k) at (6, -\k*1.4 + 0.7) {};
+    }
+    \foreach \l in {1,...,2} {
+        \node[output neuron] (O-\l) at (9, -\l*1.4 - 0.7) {$\hat{y}_{\l}$};
+    }
+    \foreach \i in {1,...,3}
+        \foreach \j in {1,...,4}
+            \draw[conn] (I-\i) -- (H1-\j);
+    \foreach \j in {1,...,4}
+        \foreach \k in {1,...,4}
+            \draw[conn] (H1-\j) -- (H2-\k);
+    \foreach \k in {1,...,4}
+        \foreach \l in {1,...,2}
+            \draw[conn] (H2-\k) -- (O-\l);
+    \node[layer label, above=0.8cm of I-1] {Eingabeschicht};
+    \node[layer label, above=1.6cm of H1-1] {Hidden Layer 1};
+    \node[layer label, above=1.6cm of H2-1] {Hidden Layer 2};
+    \node[layer label, above=0.8cm of O-1] {Ausgabeschicht};
+    \draw[decorate, decoration={brace, amplitude=6pt}, thick, black!60]
+        (2.0, 2.0) -- (7.0, 2.0)
+        node[midway, above=8pt, font=\small\itshape] {verborgene Schichten};
+    \end{tikzpicture}
+    \caption{Schematischer Aufbau eines Feedforward-Netzes mit zwei verborgenen Schichten.}
+    \label{fig:knn_architektur}
+\end{figure}
+
+\subsubsection{Anzahl der Parameter eines Netzes}
+
+\begin{formelbox}
+\begin{equation*}
+    |\Theta| = \sum_{l=1}^{L} \left( n_{l-1} \cdot n_l + n_l \right)
+\end{equation*}
+\end{formelbox}
+
+Für das in \autoref{fig:knn_architektur} gezeigte Netz ($n_0 = 3$, $n_1 = n_2 = 4$, $n_3 = 2$) ergibt sich $|\Theta| = 46$.
+
+\subsection{Gewichtung, Bias und Nettoeingabe}
+
+Jede Verbindung zwischen zwei Neuronen besitzt ein \textbf{Gewicht} $w$: positiv verstärkend, negativ hemmend, nahe null ignorierend. Der \textbf{Bias} $b$ verschiebt die Entscheidungsgrenze des Neurons und macht das Modell flexibler.
+
+\begin{formelbox}
+\begin{equation*}
+    z = \sum_{i=1}^{n} w_i \cdot x_i + b
+\end{equation*}
+\end{formelbox}
+
+\subsubsection{Initialisierung der Gewichte}
+
+Eine wichtige Frage ist, mit welchen Werten die Gewichte zu Beginn des
+Trainings belegt werden. Eine naheliegende Idee alle Gewichte auf
+null zu setzen funktioniert \emph{nicht}: Alle Neuronen einer Schicht
+würden dann identische Gradienten erhalten und sich während des gesamten
+Trainings gleich verhalten. Das Netz könnte seine Kapazität nicht
+ausschöpfen; man spricht vom \emph{Symmetrieproblem}.
+
+\paragraph{Zufällige Initialisierung.}
+Die einfachste Lösung besteht darin, die Gewichte zufällig zu wählen.
+Üblicherweise zieht man sie aus einer Normalverteilung mit Mittelwert
+null und einer festen, kleinen Standardabweichung $\sigma$:
+
+\begin{formelbox}
+\begin{equation*}
+    w_{ji}^{[l]} \sim \mathcal{N}\!\left(0,\, \sigma^2\right)
+    \qquad \text{mit z.\,B.\ } \sigma = 0{,}01
+\end{equation*}
+\end{formelbox}
+
+Alternativ kann man sie gleichverteilt aus einem kleinen Intervall
+ziehen:
+
+\begin{formelbox}
+\begin{equation*}
+    w_{ji}^{[l]} \sim \mathcal{U}\!\left(-a,\, a\right)
+    \qquad \text{mit z.\,B.\ } a = 0{,}05
+\end{equation*}
+\end{formelbox}
+
+Die Biases werden üblicherweise auf null gesetzt:
+$b_j^{[l]} = 0$.
+
+\textbf{Warum das allein oft nicht reicht:}
+Eine feste Standardabweichung $\sigma$ führt bei tiefen Netzen zu
+Problemen. Ist $\sigma$ zu klein, werden die Aktivierungen und
+Gradienten mit jeder Schicht kleiner (\emph{vanishing gradients}). Ist
+$\sigma$ zu groß, wachsen sie exponentiell (\emph{exploding gradients}).
+Die richtige Skalierung hängt daher von der Größe der Schicht ab
+genau das berücksichtigen die folgenden Verfahren.
+
+\paragraph{Xavier-/Glorot-Initialisierung.}
+Diese von Glorot und Bengio (2010) vorgeschlagene Methode skaliert die
+Streuung mit der Anzahl der Ein- und Ausgänge der Schicht. Bezeichnen
+$n_{\text{in}} = n_{l-1}$ die Anzahl der Eingänge und
+$n_{\text{out}} = n_l$ die Anzahl der Ausgänge, so gilt:
+
+\begin{formelbox}
+\begin{equation*}
+    w_{ji}^{[l]} \sim \mathcal{N}\!\left(0,\, \frac{2}{n_{\text{in}} + n_{\text{out}}}\right)
+\end{equation*}
+\end{formelbox}
+
+Alternativ kann man gleichverteilt ziehen:
+$w \sim \mathcal{U}\!\left(-\sqrt{\tfrac{6}{n_{\text{in}} + n_{\text{out}}}},\, \sqrt{\tfrac{6}{n_{\text{in}} + n_{\text{out}}}}\right)$.
+Diese Initialisierung eignet sich besonders für \textbf{Sigmoid} und
+\textbf{Tanh}, da sie die Aktivierungen über die Schichten hinweg in
+einer ähnlichen Größenordnung hält.
+
+\paragraph{He-Initialisierung.}
+Für Netze mit \textbf{ReLU}-Aktivierung schlug He et al.\ (2015) eine
+ähnliche, aber stärkere Skalierung vor. Da ReLU die Hälfte aller Werte
+auf null setzt, ist eine doppelt so große Varianz nötig:
+
+\begin{formelbox}
+\begin{equation*}
+    w_{ji}^{[l]} \sim \mathcal{N}\!\left(0,\, \frac{2}{n_{\text{in}}}\right)
+\end{equation*}
+\end{formelbox}
+
+Hierbei ist $n_{\text{in}} = n_{l-1}$ die Anzahl der Eingänge der
+Schicht. Die He-Initialisierung ist heute der Standard bei
+ReLU-basierten Netzen.
+
+\paragraph{Übersicht.}
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabular}{l l l}
+    \toprule
+    \textbf{Verfahren} & \textbf{Verteilung} & \textbf{Geeignet für} \\
+    \midrule
+    Einfach zufällig      & $\mathcal{N}(0, \sigma^2)$, festes $\sigma$ & sehr kleine Netze \\
+    Xavier / Glorot       & $\mathcal{N}\!\left(0, \tfrac{2}{n_{\text{in}} + n_{\text{out}}}\right)$ & Sigmoid, Tanh \\
+    He                    & $\mathcal{N}\!\left(0, \tfrac{2}{n_{\text{in}}}\right)$ & ReLU \\
+    \bottomrule
+    \end{tabular}
+    \caption{Übersicht der Initialisierungsverfahren.}
+    \label{tab:initialisierung}
+\end{table}
+
+\autoref{alg:he-init} fasst die He-Initialisierung, die in diesem
+Projekt verwendet wird, als Pseudocode zusammen.
+
+\begin{algorithm}[htbp]
+\caption{He-Initialisierung der Gewichte}
+\label{alg:he-init}
+\begin{algorithmic}[1]
+\Require Anzahl der Eingänge $n_{l-1}$ jeder Schicht $l$
+\For{jede Schicht $l = 1, \dots, L$}
+    \State $W^{[l]} \sim \mathcal{N}\!\left(0,\, \tfrac{2}{n_{l-1}}\right)$
+    \State $b^{[l]} \gets \mathbf{0}$
+\EndFor
+\State \Return initialisierte $W^{[l]}$ und $b^{[l]}$
+\end{algorithmic}
+\end{algorithm}
+
+In der Praxis wird die Normalverteilung mit der Klasse
+\texttt{java.util.Random} erzeugt. Deren Methode
+\texttt{nextGaussian()} liefert Werte aus $\mathcal{N}(0, 1)$, die
+anschließend mit der gewünschten Standardabweichung multipliziert
+werden. Der folgende Codeausschnitt zeigt die He-Initialisierung für
+eine einzelne Schicht umgesetzt mit reinem JDK, ohne externe
+Bibliotheken.
+
+\newpage
+\begin{lstlisting}[language=Java, caption={He-Initialisierung in Java}, label={lst:he-init}]
+import java.util.Random;
+
+public class Initializer {
+
+    private static final Random RANDOM = new Random(42);
+
+    /**
+     * Erzeugt die Gewichtsmatrix einer Schicht nach der
+     * He-Initialisierung.
+     *
+     * @param nIn  Anzahl der Eingaenge  (Neuronen der Vorschicht)
+     * @param nOut Anzahl der Ausgaenge (Neuronen dieser Schicht)
+     * @return Initialisierte Gewichte mit Dimension nOut x nIn
+     */
+    public static double[][] heInitWeights(int nIn, int nOut) {
+        double std = Math.sqrt(2.0 / nIn);
+        double[][] W = new double[nOut][nIn];
+
+        for (int j = 0; j < nOut; j++) {
+            for (int i = 0; i < nIn; i++) {
+                W[j][i] = RANDOM.nextGaussian() * std;
+            }
+        }
+        return W;
+    }
+
+    /** Biases werden auf null gesetzt. */
+    public static double[] heInitBiases(int nOut) {
+        return new double[nOut];
+    }
+}
+\end{lstlisting}
+
+Die Methode \texttt{nextGaussian()} liefert normalverteilte Werte mit
+Mittelwert~$0$ und Standardabweichung~$1$. Durch Multiplikation mit
+$\sqrt{2 / n_{\text{in}}}$ erhält man die gewünschte He-Verteilung
+$\mathcal{N}\!\left(0,\, 2 / n_{\text{in}}\right)$.
+
+Der Seed \texttt{42} sorgt für reproduzierbare Ergebnisse bei jedem
+Programmlauf werden dieselben Zufallszahlen gezogen. Für den echten
+Trainingslauf kann der Seed weggelassen oder variiert werden.
+
+Für die Xavier-/Glorot-Initialisierung ändert sich nur die
+Standardabweichung. Die übrige Implementierung bleibt identisch:
+
+\begin{lstlisting}[language=Java, caption={Xavier-/Glorot-Initialisierung}, label={lst:xavier}]
+public static double[][] xavierInitWeights(int nIn, int nOut) {
+    double std = Math.sqrt(2.0 / (nIn + nOut));
+    double[][] W = new double[nOut][nIn];
+
+    for (int j = 0; j < nOut; j++) {
+        for (int i = 0; i < nIn; i++) {
+            W[j][i] = RANDOM.nextGaussian() * std;
+        }
+    }
+    return W;
+}
+\end{lstlisting}
+
+\subsection{Aktivierungsfunktionen}
+
+Ohne Aktivierungsfunktion wäre ein neuronales Netz nur eine lineare Abbildung. Vier Funktionen sind für FNN besonders relevant: \textbf{ReLU} (Standard in Hidden Layers), \textbf{Sigmoid} (binäre Ausgabe), \textbf{Tanh} (symmetrisch um null) und \textbf{Softmax} (Mehrklassen-Ausgabe).
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabular}{l c c p{4cm}}
+    \toprule
+    \textbf{Funktion} & \textbf{Wertebereich} & \textbf{Ableitung} & \textbf{Typischer Einsatz} \\
+    \midrule
+    ReLU    & $[0, \infty)$ & $0$ oder $1$             & Hidden Layers \\
+    Sigmoid & $(0, 1)$      & $\sigma(x)(1-\sigma(x))$ & Binäre Ausgabe \\
+    Tanh    & $(-1, 1)$     & $1 - \tanh^2(x)$         & Hidden Layers (älter) \\
+    Softmax & $(0, 1)$      & vektorwertig             & Mehrklassen-Ausgabe \\
+    \bottomrule
+    \end{tabular}
+    \caption{Übersicht der Aktivierungsfunktionen.}
+    \label{tab:aktivierungsvergleich}
+\end{table}
+
+\newpage
+\subsection{Ablauf des Trainings}
+
+Das Training erfolgt iterativ in vier Phasen: Forward Pass, Loss-Berechnung, Backpropagation und Gewichtsupdate (\autoref{alg:trainingszyklus}).
+
+\begin{algorithm}[htbp]
+\caption{Trainingszyklus eines FNN mit Mini-Batches}
+\label{alg:trainingszyklus}
+\begin{algorithmic}[1]
+\Require Trainingsdaten $\mathcal{D} = \{(x^{(i)}, y^{(i)})\}_{i=1}^{N}$, Lernrate $\eta$, Batch-Größe $B$, Epochen $E$
+\State Initialisiere alle $W^{[l]}$ und $b^{[l]}$
+\For{Epoche $= 1$ \textbf{bis} $E$}
+    \State Mische $\mathcal{D}$ und teile in Mini-Batches der Größe $B$ auf
+    \For{jeden Mini-Batch $\mathcal{B}$}
+        \State \textbf{Forward Pass:} Berechne $\hat{y}^{(i)}$ für alle $x^{(i)} \in \mathcal{B}$
+        \State \textbf{Loss:} $L_{\mathcal{B}} \gets \tfrac{1}{|\mathcal{B}|} \sum_{i \in \mathcal{B}} L(y^{(i)}, \hat{y}^{(i)})$
+        \State \textbf{Backpropagation:} Berechne $\partial L_{\mathcal{B}} / \partial w$, $\partial L_{\mathcal{B}} / \partial b$
+        \State \textbf{Update:} $w \gets w - \eta \cdot \partial L_{\mathcal{B}} / \partial w$
+    \EndFor
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Forward Pass}
+
+\begin{formelbox}
+\begin{equation*}
+    z_j^{[l]} = \sum_{i} w_{ji}^{[l]} a_i^{[l-1]} + b_j^{[l]},
+    \qquad
+    a_j^{[l]} = f\!\left(z_j^{[l]}\right)
+\end{equation*}
+\end{formelbox}
+
+\subsubsection{Loss-Berechnung}
+
+\begin{formelbox}
+\begin{equation*}
+    L_{\text{MSE}} = \frac{1}{2}(y - \hat{y})^2
+    \qquad \text{und} \qquad
+    L_{\text{CE}} = - \sum_{k} y_k \log(\hat{y}_k)
+\end{equation*}
+\end{formelbox}
+
+\subsubsection{Backpropagation}
+
+\begin{formelbox}
+\begin{equation*}
+    \delta_j^{[l]} = \left( \sum_{k} \delta_k^{[l+1]} w_{kj}^{[l+1]} \right) f'\!\left(z_j^{[l]}\right),
+    \qquad
+    \frac{\partial L}{\partial w_{ji}^{[l]}} = \delta_j^{[l]} a_i^{[l-1]}
+\end{equation*}
+\end{formelbox}
+
+\subsubsection{Gewichtsupdate (Gradient Descent)}
+
+\begin{formelbox}
+\begin{equation*}
+    w_{ji}^{[l]} \leftarrow w_{ji}^{[l]} - \eta \frac{\partial L}{\partial w_{ji}^{[l]}},
+    \qquad
+    b_j^{[l]} \leftarrow b_j^{[l]} - \eta \delta_j^{[l]}
+\end{equation*}
+\end{formelbox}
+
+\subsection{Overfitting und Regularisierung}
+
+Gegenmaßnahmen gegen Overfitting: Datenteilung (Training/Validierung/Test), Early Stopping, L2-Regularisierung ($L_{\text{reg}} = L + \lambda \sum_l \|W^{[l]}\|_F^2$), Dropout ($\tilde{a}_j = \frac{m_j}{1-p} a_j$, $m_j \sim \mathrm{Bernoulli}(1-p)$) und Data Augmentation.
+
+\newpage
+\subsection{Zusammenfassung}
+
+\begin{itemize}
+    \item Ein FNN besteht aus Neuronen, die in Schichten organisiert sind.
+    \item Jedes Neuron berechnet eine gewichtete Summe plus Bias und wendet eine Aktivierungsfunktion an.
+    \item Die Nichtlinearität der Aktivierungsfunktion ist entscheidend für die Ausdrucksstärke.
+    \item Das Training besteht aus vier Phasen: Forward Pass, Loss, Backpropagation und Update.
+\end{itemize}
+
+\newpage

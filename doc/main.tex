@@ -1,0 +1,132 @@
+\documentclass{article}
+
+% Sprache
+\usepackage[german]{babel}
+\usepackage{csquotes}
+% Seitenformat
+\usepackage[
+    a4paper,
+    top=2cm, bottom=2cm, left=3cm, right=3cm,
+    marginparwidth=1.75cm
+]{geometry}
+
+% Mathematik und Grafik
+\usepackage{amsmath}
+\usepackage{amssymb} 
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, decorations.pathreplacing}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% Überlaufschutz
+\usepackage{microtype}
+\tolerance=1000
+\emergencystretch=1em
+
+% Tabellen und Algorithmen
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Code-Listings
+\usepackage{listings}
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{formelblau}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{orange!80!black},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    frame=single,
+    rulecolor=\color{formelblau!60},
+    backgroundcolor=\color{formelhell},
+    breaklines=true,
+    showstringspaces=false,
+    tabsize=4
+}
+% Java als listings-Sprache definieren
+\lstdefinelanguage{Java}{
+    morekeywords={abstract,boolean,break,byte,case,catch,char,class,const,
+        continue,default,do,double,else,enum,extends,false,final,finally,
+        float,for,if,implements,import,instanceof,int,interface,long,native,
+        new,null,package,private,protected,public,return,short,static,
+        strictfp,super,switch,synchronized,this,throw,throws,transient,
+        true,try,void,volatile,while},
+    sensitive=true,
+    morecomment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    morestring=[b]"
+}
+
+% Farbige Boxen
+\usepackage[most]{tcolorbox}
+\definecolor{formelblau}{RGB}{30, 90, 160}
+\definecolor{formelhell}{RGB}{235, 243, 252}
+
+\newtcolorbox{formelbox}{
+    colback=formelhell, colframe=formelblau,
+    boxrule=0.6pt, arc=3pt,
+    left=6pt, right=6pt, top=6pt, bottom=6pt, boxsep=1pt,
+    enhanced,
+    shadow={1pt}{-1pt}{0pt}{formelblau!40}
+}
+
+\newtcolorbox{hinweisbox}[1][]{
+    colback=orange!5, colframe=orange!70!black,
+    boxrule=0.6pt, arc=3pt,
+    left=6pt, right=6pt, top=6pt, bottom=6pt, boxsep=1pt,
+    fonttitle=\bfseries, coltitle=white, colbacktitle=orange!70!black,
+    title=#1
+}
+
+\makeatletter
+\renewcommand{\ALG@name}{Algorithmus}
+\makeatother
+
+% Operatoren
+\DeclareMathOperator{\softmax}{softmax}
+
+\usepackage[
+    backend=biber,
+    style=numeric,
+    sorting=nyt,
+    giveninits=true,
+    maxbibnames=99,
+    doi=true,
+    isbn=false
+]{biblatex}
+\addbibresource{literatur.bib}
+
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\def\algorithmautorefname{Algorithmus}
+\def\figureautorefname{Abbildung}
+\def\tableautorefname{Tabelle}
+\def\equationautorefname{Gleichung}
+\def\sectionautorefname{Abschnitt}
+\def\subsectionautorefname{Unterabschnitt}
+\def\lstlistingautorefname{Listing}
+
+\title{Projektbuch}
+\author{Kelders Liam, Strohm Aaron, Niemann Anton}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\include{kapitel/einleitung}
+\include{kapitel/wochendoku}
+\include{kapitel/theorie}
+\include{kapitel/datensatz}
+\include{kapitel/implementierung}
+\include{kapitel/ergebnisse}
+\include{kapitel/diskussion}
+\include{kapitel/fazit}
+
+\newpage
+\printbibliography
+\end{document}
