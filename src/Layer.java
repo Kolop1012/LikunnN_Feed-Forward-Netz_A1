@@ -1,9 +1,8 @@
-import java.util.List;
-import java.util.ArrayList;
+import java.util.function.Function;
 
 public class Layer {
 
-    private final List<Neuron> neurons = new ArrayList<>();
+    private Neuron[] neurons;
     private double[][] weights;
 
     /**
@@ -17,9 +16,10 @@ public class Layer {
      * @param inputNodes Die Anzahl der Neuronen in dieser Eingabeschicht.
      */
 
-    public Layer(int inputNodes) {
+    public Layer(int inputNodes, Function<Double, Double> activiationFunction) {
+        neurons = new Neuron[inputNodes];
         for (int i = 0; i < inputNodes; i++) {
-            neurons.add(new Neuron(0.0));
+            neurons[i] = new Neuron(activiationFunction);
         }
     }
 
@@ -38,19 +38,20 @@ public class Layer {
      *                        Schicht.
      */
 
-    public Layer(int currentNeurons, int previousNeurons) {
+    public Layer(int currentNeurons, int previousNeurons, Function<Double, Double> activiationFunction) {
+        neurons = new Neuron[currentNeurons];
         for (int i = 0; i < currentNeurons; i++) {
-            neurons.add(new Neuron(0.0));
+            neurons[i] = new Neuron(activiationFunction);
         }
 
-        this.weights = new double[currentNeurons][previousNeurons];
+        this.weights = new double[currentNeurons][previousNeurons+1];
         initWeights();
     }
 
     private void initWeights() {
         for (int i = 0; i < weights.length; i++) {
             for (int j = 0; j < weights[i].length; j++) {
-                weights[i][j] = (Math.random() - 0.5);
+                weights[i][j] = 1;  //änderen wenn nicht linear
             }
         }
     }
@@ -58,7 +59,7 @@ public class Layer {
     /*
      * Getters
      */
-    public List<Neuron> getNeurons() {
+    public Neuron[] getNeurons() {
         return neurons;
     }
 

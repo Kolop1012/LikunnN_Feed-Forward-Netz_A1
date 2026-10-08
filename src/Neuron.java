@@ -1,3 +1,5 @@
+import java.util.function.Function;
+
 /**
  * Repräsentiert ein einzelnes Neuron (Knoten) innerhalb einer Schicht des
  * Netzwerks.
@@ -7,30 +9,29 @@
 public class Neuron {
 
     private double value;
-    private double bias;
+    private final Function<Double, Double> activiationFunction;
 
     /**
      * Erstellt ein neues Neuron mit dem angegebenen Schwellenwert.
      * Der Aktivierungswert wird initial auf 0.0 gesetzt.
      *
-     * @param bias Der anfängliche Schwellenwert (Bias) des Neurons.
+     * @param activiationFunction Der anfängliche Schwellenwert (Bias) des Neurons.
      */
 
-    public Neuron(double bias) {
-        this.bias = bias;
+    public Neuron(Function<Double, Double> activiationFunction) {
+        this.activiationFunction = activiationFunction;
         this.value = 0.0;
     }
 
+    public void caluculate() {
+        value = activiationFunction.apply(value);
+    }
     public double getValue() {
         return value;
     }
 
     public void setValue(double value) {
         this.value = value;
-    }
-
-    public double getBias() {
-        return bias;
     }
 
 }
