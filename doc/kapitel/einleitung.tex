@@ -1,0 +1,85 @@
+\section{Einleitung}
+\label{sec:einleitung}
+
+\subsection{Motivation}
+
+Künstliche neuronale Netze sind in den vergangenen Jahren zu einem der wichtigsten Werkzeuge des maschinellen Lernens geworden. Sie stecken hinter Anwendungen wie Bild- und Spracherkennung, maschineller Übersetzung oder medizinischer Diagnostik. Der grundlegende Baustein all dieser Systeme ist das \emph{Feedforward-Netz} (FNN) ein Netz, in dem Informationen ausschließlich in eine Richtung fließen. Wer die Funktionsweise eines FNN versteht, versteht damit auch die Basis moderner Deep-Learning-Modelle.
+
+Der Kurs \emph{„Lernen in natürlichen und künstlichen neuronalen Netzen“} vermittelt genau diese Grundlagen sowohl aus neurowissenschaftlicher als auch aus informatischer Perspektive. Im Rahmen des Kursprojekts soll ein FNN von Grund auf selbst implementiert werden, ohne auf fertige Deep-Learning-Bibliotheken zurückzugreifen. Ziel ist es, die mathematischen und algorithmischen Grundlagen nicht nur zu verstehen, sondern praktisch umzusetzen.
+
+\subsection{Problemstellung und Zielsetzung}
+
+Das Projekt verfolgt drei Ziele:
+
+\begin{enumerate}
+    \item \textbf{Theoretisches Verständnis:} Die mathematischen Grundlagen von Gewichten, Biases, Aktivierungsfunktionen, Forward Pass, Loss-Berechnung und Backpropagation sollen erarbeitet und dokumentiert werden.
+
+    \item \textbf{Implementierung:} Ein FNN mit beliebig vielen Hidden Layers soll in Java implementiert werden zunächst ohne Bias, später mit vollständiger Unterstützung für Gewichte und Biases.
+
+    \item \textbf{Evaluation:} Das implementierte Netz soll auf einem geeigneten Datensatz trainiert und hinsichtlich seiner Lernfähigkeit bewertet werden.
+\end{enumerate}
+
+Am Ende des Projekts steht ein lauffähiges FNN, dessen sämtliche Komponenten selbst geschrieben und nachvollziehbar dokumentiert sind.
+
+\subsection{Abgrenzung}
+
+Das Projekt beschäftigt sich ausschließlich mit \textbf{Feedforward-Netzen}. Andere Architekturen wie Convolutional Neural Networks (CNN), Recurrent Neural Networks (RNN) oder Transformer werden nur am Rande erwähnt und sind nicht Teil der Implementierung. Ebenso wird auf spezielle Optimierer wie Adam oder auf Regularisierungstechniken (z.\,B.\ Dropout) nur theoretisch eingegangen die praktische Umsetzung beschränkt sich auf klassisches Gradient Descent.
+
+\subsection{Vorgehen}
+
+Das Projekt gliedert sich in drei Phasen, die sich in der Wochendokumentation wiederfinden:
+
+\begin{itemize}
+    \item \textbf{Recherchephase:} Erarbeitung der theoretischen Grundlagen (Forward Pass, Loss, Backpropagation).
+    \item \textbf{Implementierungsphase:} Aufbau des FNN in Java, zunächst mit Gewichten ohne Bias, dann mit vollständiger Parameterunterstützung.
+    \item \textbf{Evaluationsphase:} Training und Auswertung auf einem Testdatensatz.
+\end{itemize}
+
+\newpage
+\subsection{Aufbau des Dokuments}
+
+Das vorliegende Projektbuch ist wie folgt aufgebaut:
+
+\begin{itemize}
+    \item \autoref{sec:wochen} dokumentiert den Projektverlauf Woche für Woche.
+
+    \item \autoref{sec:theorie} führt in die theoretischen Grundlagen künstlicher neuronaler Netze ein.
+
+    \item \autoref{sec:datensatz} beschreibt den verwendeten Datensatz und seine Vorverarbeitung.
+
+    \item \autoref{sec:implementierung} dokumentiert die konkrete Umsetzung in Java.
+
+    \item \autoref{sec:ergebnisse} präsentiert die Trainingsergebnisse und deren Auswertung.
+
+    \item \autoref{sec:diskussion} ordnet die Ergebnisse kritisch ein.
+
+    \item \autoref{sec:fazit} fasst das Projekt zusammen und gibt einen Ausblick.
+\end{itemize}
+
+\subsection{Team und Rollen}
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabular}{l l}
+    \toprule
+    \textbf{Name} & \textbf{Aufgabenbereich} \\
+    \midrule
+    Liam Kelders  & Dokumentation, Projektbuch \\
+    Aaron Strohm  & Recherche, theoretische Grundlagen \\
+    Anton Niemann & Programmierung, Implementierung \\
+    \bottomrule
+    \end{tabular}
+    \caption{Rollenverteilung im Projektteam.}
+    \label{tab:rollen}
+\end{table}
+
+\subsection{Repository}
+
+Der vollständige Quellcode des Projekts ist öffentlich auf GitHub verfügbar:
+
+\begin{center}
+\href{https://github.com/Kolop1012/LikunnN_Feed-Forward-Netz_A1}{github.com/Kolop1012/LikunnN\_Feed-Forward-Netz\_A1}
+\end{center}
+
+\newpage
