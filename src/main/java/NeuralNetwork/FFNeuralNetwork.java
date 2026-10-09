@@ -21,7 +21,7 @@ public class FFNeuralNetwork {
      *                           Neuronen in
      *                           dieser Schicht angibt. Muss mindestens 2 Elemente
      *                           enthalten.
-     * @param activationFunction Die globale Aktivierungsfunktion, die auf die
+     * @param activationEnum Die Aktivierungsfunktion, die auf die
      *                           Neuronen angewendet wird.
      * @throws IllegalArgumentException Wenn die Topologie null ist oder weniger als
      *                                  2 Schichten enthält.

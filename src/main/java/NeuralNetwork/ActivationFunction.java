@@ -8,16 +8,28 @@ import java.util.function.Function;
  */
 public enum ActivationFunction {
 
-    /** Lineare Aktivierungsfunktion (keine Veränderung). */
+    /**
+     * Lineare Aktivierungsfunktion (keine Veränderung).
+     */
+    @SuppressWarnings("unused")
     LINEAR(x -> x),
 
-    /** Sigmoid-Funktion (bildet Werte auf den Bereich (0, 1) ab). */
+    /**
+     * Sigmoid-Funktion (bildet Werte auf den Bereich (0, 1) ab).
+     */
+    @SuppressWarnings("unused")
     SIGMOID(x -> 1.0 / (1.0 + Math.exp(-x))),
 
-    /** ReLU (Rectified Linear Unit) - gibt 0 für negative Werte zurück, sonst x. */
+    /**
+     * ReLU (Rectified Linear Unit) - gibt 0 für negative Werte zurück, sonst x.
+     */
+    @SuppressWarnings("unused")
     RELU(x -> Math.max(0.0, x)),
 
-    /** Tanh (Hyperbolischer Tangens) - bildet Werte auf den Bereich (-1, 1) ab. */
+    /**
+     * Tanh (Hyperbolischer Tangens) - bildet Werte auf den Bereich (-1, 1) ab.
+     */
+    @SuppressWarnings("unused")
     TANH(Math::tanh);
 
     private final Function<Double, Double> function;

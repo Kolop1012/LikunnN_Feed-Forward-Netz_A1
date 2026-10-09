@@ -16,7 +16,7 @@ public class Layer {
 
     /**
      * Erstellt die Eingabeschicht (Input Layer) des neuronalen Netzwerks.
-     * Diese Schicht besitzt keine Gewichtsmatrix.
+     * <p>Diese Schicht besitzt keine <b>Gewichtsmatrix<b/>.
      *
      * @param inputNodes         Die Anzahl der Neuronen in dieser Eingabeschicht.
      * @param activationFunction Die Aktivierungsfunktion für die Neuronen.
@@ -26,7 +26,7 @@ public class Layer {
         for (int i = 0; i < inputNodes; i++) {
             neurons[i] = new Neuron(activationFunction);
         }
-        this.weights = null; // Input-Schicht besitzt keine Gewichtsmatrix
+        this.weights = null;
     }
 
     /**
@@ -49,26 +49,30 @@ public class Layer {
         initWeights();
     }
 
+
     /**
      * Initialisiert die Gewichtsmatrix mit Startwerten (aktuell fix auf 1.0).
+     *
+     * <p><b>TODO:</b> Durch echte Zufallsinitialisierung (z.B. {@code Math.random()}) ersetzen.
      */
     private void initWeights() {
         for (int i = 0; i < weights.length; i++) {
             for (int j = 0; j < weights[i].length; j++) {
-                weights[i][j] = 1.0; // Kann für Tests so bleiben, später z. B. durch Math.Random ersetzen
+                weights[i][j] = 1.0;
             }
         }
     }
 
     /**
-     * Berechnet die Aktivierungen dieser Schicht basierend auf den Werten der
-     * vorherigen Schicht.
-     * Dabei werden die Ausgaben der Vorgängerschicht mit den Gewichten
-     * multipliziert,
-     * der Bias addiert und die Aktivierungsfunktion aufgerufen.
+     * Führt einen Vorwärtsdurchlauf (Forward Pass) für diese Schicht durch.
+     * Berechnet für jedes Neuron die gewichtete Summe der Eingaben aus der
+     * Vorgängerschicht, addiert den Bias und wendet die Aktivierungsfunktion an.
      *
-     * @param previousLayer Die vorherige Schicht im Netzwerk, deren Werte als Input
-     *                      dienen.
+     * @param previousLayer Die vorherige Schicht im Netzwerk, deren Aktivierungen
+     *                      als Eingabe dienen. Für die Eingangsschicht hat dieser
+     *                      Parameter keine Auswirkungen.
+     * @throws IllegalArgumentException wenn {@code previousLayer} die falsche Anzahl
+     *                                  an Eingaben für die Gewichtsmatrix liefert.
      */
     public void forward(Layer previousLayer) {
         if (weights == null)
@@ -110,5 +114,5 @@ public class Layer {
     public Neuron[] getNeurons() {
         return neurons;
     }
-    
+
 }
