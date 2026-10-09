@@ -1,18 +1,29 @@
-\documentclass{article}
+\documentclass[12pt]{article}
 
 % Sprache
-\usepackage[german]{babel}
+\usepackage[ngerman]{babel}
+% Deutscher Zeichensatz und Trennung
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+% Times-ähnliche Schrift in Text und Mathematik
+\usepackage{newtxtext,newtxmath}
+% Fließtext ausdrücklich im Blocksatz setzen
+\usepackage{ragged2e}
+\AtBeginDocument{\justifying}
+% 1,5-facher Zeilenabstand
+\usepackage{setspace}
+\onehalfspacing
 \usepackage{csquotes}
 % Seitenformat
 \usepackage[
     a4paper,
-    top=2cm, bottom=2cm, left=3cm, right=3cm,
+    top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm,
     marginparwidth=1.75cm
 ]{geometry}
 
 % Mathematik und Grafik
 \usepackage{amsmath}
-\usepackage{amssymb} 
+% newtxmath stellt die mathematischen Symbole bereits bereit.
 \usepackage{tikz}
 \usetikzlibrary{positioning, arrows.meta, decorations.pathreplacing}
 \usepackage{graphicx}
