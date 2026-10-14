@@ -1,3 +1,74 @@
+### LaTeX-Ausgabedateien ###
+*.aux
+*.auxlock
+*.bbl
+*.bcf
+*.blg
+*.brf
+*.fdb_latexmk
+*.fls
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lol
+*.lot
+*.out
+*.run.xml
+*.synctex
+*.synctex.gz
+*.synctex(busy)
+*.synctex.gz(busy)
+*.toc
+*.xdv
+*.dvi
+*.ps
+
+# Glossare und Abkürzungen
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.glsdefs
+*.ist
+
+# Beamer
+*.nav
+*.snm
+*.vrb
+*.spl
+
+# Nomenklatur
+*.nlo
+*.nls
+*.lpr
+
+# Minitoc
+*.maf
+*.mtc
+*.mtc0
+*.ptc
+*.ptc0
+
+# Theorem-Umgebungen
+*.tdo
+*.thm
+
+# Biber
+*.bcf
+*.run.xml
+*.xdy
+
+# Weitere temporäre Dateien
+*.upa
+*.upb
+*.syg
+*.sym
+*.loa
+
 ### Maven ###
 target/
 pom.xml.tag
