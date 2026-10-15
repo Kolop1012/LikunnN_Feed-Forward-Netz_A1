@@ -108,8 +108,8 @@ public class Layer {
         return values;
     }
 
-    /*
-     * Getters
+    /**
+     * Getter für Neuronen
      */
     public Neuron[] getNeurons() {
         return neurons;
