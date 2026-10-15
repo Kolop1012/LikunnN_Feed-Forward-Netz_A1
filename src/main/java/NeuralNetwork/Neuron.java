@@ -11,16 +11,16 @@ import java.util.function.Function;
 public class Neuron {
 
     private double value;
-    private final Function<Double, Double> activationFunction;
+    private final ActivationFunction activationFunction;
 
     /**
      * Erstellt ein neues Neuron mit der übergebenen Aktivierungsfunktion.
      * Der initiale Aktivierungswert wird auf 0.0 gesetzt.
      *
-     * @param activationFunction Die Aktivierungsfunktion für dieses Neuron.
+     * @param activationEnum Die Aktivierungsfunktion für dieses Neuron.
      */
-    public Neuron(Function<Double, Double> activationFunction) {
-        this.activationFunction = activationFunction;
+    public Neuron(ActivationFunction activationEnum) {
+        this.activationFunction = activationEnum;
         this.value = 0.0;
     }
 
@@ -40,5 +40,9 @@ public class Neuron {
 
     public void setValue(double value) {
         this.value = value;
+    }
+
+    public ActivationFunction getActivationFunction () {
+        return this.activationFunction;
     }
 }

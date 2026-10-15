@@ -33,11 +33,11 @@ public class FFNeuralNetwork {
         layers = new Layer[topology.length];
 
         // Input-Schicht (hat keine Gewichte zur Vorsicht)
-        layers[0] = new Layer(topology[0], activationEnum.getFunction());
+        layers[0] = new Layer(topology[0], activationEnum);
 
         // Hidden- und Output-Schichten
         for (int i = 1; i < topology.length; i++) {
-            layers[i] = new Layer(topology[i], topology[i - 1], activationEnum.getFunction());
+            layers[i] = new Layer(topology[i], topology[i - 1], activationEnum);
         }
     }
 
@@ -72,5 +72,15 @@ public class FFNeuralNetwork {
 
         // 3. Ausgaben der letzten Schicht zurückgeben
         return layers[layers.length - 1].getValues();
+    }
+
+    public void train(double learningRate, double[] targets) {
+        int lastIndex = layers.length - 1;
+
+        double[] deltas = layers[lastIndex].backward(null, null, targets, learningRate);
+
+        for (int i = lastIndex - 1; i > 0; i--) {
+            deltas = layers[i].backward(deltas, layers[i + 1].getWeights(), null, learningRate);
+        }
     }
 }
