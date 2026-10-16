@@ -1,7 +1,5 @@
 package NeuralNetwork;
 
-import java.util.function.Function;
-
 /**
  * Repräsentiert ein einzelnes Neuron (Knoten) innerhalb einer Schicht des
  * Netzwerks.

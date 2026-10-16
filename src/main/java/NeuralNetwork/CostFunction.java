@@ -12,6 +12,16 @@ package NeuralNetwork;
 
 public enum CostFunction implements LossFunction {
 
+    /** Trainingsfehler passend zur Delta-Regel der Folien: halbe Fehlerquadratsumme. */
+    HalfSquaredError((outputs, targets) -> {
+        double sum = 0.0;
+        for (int i = 0; i < outputs.length; i++) {
+            double error = targets[i] - outputs[i];
+            sum += error * error;
+        }
+        return 0.5 * sum;
+    }),
+
     /**
      * Mean Squared Error (MSE).
      * Berechnet den durchschnittlichen quadrierten Abstand zwischen den
@@ -53,6 +63,9 @@ public enum CostFunction implements LossFunction {
 
     @Override
     public double calculate(double[] outputs, double[] targets) {
+        if (outputs == null || targets == null || outputs.length == 0 || outputs.length != targets.length) {
+            throw new IllegalArgumentException("Ausgaben und Zielwerte müssen gleich lang und nicht leer sein.");
+        }
         return lossFunction.calculate(outputs, targets);
     }
 

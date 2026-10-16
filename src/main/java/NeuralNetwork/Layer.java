@@ -1,6 +1,6 @@
 package NeuralNetwork;
 
-import java.util.function.Function;
+import java.util.Random;
 
 /**
  * Repräsentiert eine Schicht (Layer) innerhalb des neuronalen Netzwerks.
@@ -15,6 +15,7 @@ public class Layer {
     private double[][] weights;
     private double[] lastInputs;
     private double[] lastRawInputs;
+    private double[][] previousUpdates;
     /**
      * Erstellt die Eingabeschicht (Input Layer) des neuronalen Netzwerks.
      * <p>Diese Schicht besitzt keine <b>Gewichtsmatrix<b/>.
@@ -40,6 +41,10 @@ public class Layer {
      * @param activationEnum Die Aktivierungsfunktion für die Neuronen.
      */
     public Layer(int currentNeurons, int previousNeurons, ActivationFunction activationEnum) {
+        this(currentNeurons, previousNeurons, activationEnum, new Random());
+    }
+
+    Layer(int currentNeurons, int previousNeurons, ActivationFunction activationEnum, Random random) {
         neurons = new Neuron[currentNeurons];
         for (int i = 0; i < currentNeurons; i++) {
             neurons[i] = new Neuron(activationEnum);
@@ -47,18 +52,18 @@ public class Layer {
 
         // Spalte für den Bias (previousNeurons + 1)
         this.weights = new double[currentNeurons][previousNeurons + 1];
-        initWeights();
+        this.previousUpdates = new double[currentNeurons][previousNeurons + 1];
+        initWeights(random, previousNeurons);
     }
 
     /**
-     * Initialisiert die Gewichtsmatrix mit Startwerten (aktuell fix auf 1.0).
-     *
-     * <p><b>TODO:</b> Durch echte Zufallsinitialisierung (z.B. {@code Math.random()}) ersetzen.
+     * Symmetrische Zufallswerte (Xavier-Bereich); Bias startet bei null.
      */
-    private void initWeights() {
+    private void initWeights(Random random, int previousNeurons) {
+        double limit = Math.sqrt(6.0 / (previousNeurons + neurons.length));
         for (int i = 0; i < weights.length; i++) {
-            for (int j = 0; j < weights[i].length; j++) {
-                weights[i][j] = Math.random() * 0.5 - 0.25;
+            for (int j = 0; j < previousNeurons; j++) {
+                weights[i][j] = (random.nextDouble() * 2.0 - 1.0) * limit;
             }
         }
     }
@@ -79,6 +84,9 @@ public class Layer {
             return; // Input-Schicht hat keine Vorgänger-Gewichte
 
         double[] prevValues = previousLayer.getValues();
+        if (prevValues.length != weights[0].length - 1) {
+            throw new IllegalArgumentException("Die Vorgängerschicht passt nicht zur Gewichtsmatrix.");
+        }
         this.lastInputs = prevValues;
         this.lastRawInputs = new double[neurons.length];
 
@@ -122,7 +130,8 @@ public class Layer {
         return weights;
     }
 
-    public double[] backward(double[] nextLayerDeltas, double[][] nextLayerWeights, double[] targets, double learningRate) {
+    /** Berechnet nur die Deltas und verändert noch keine Gewichte. */
+    double[] calculateDeltas(double[] nextLayerDeltas, double[][] nextLayerWeights, double[] targets) {
         int currentSize = neurons.length;
         double[] currentDeltas = new double[currentSize];
 
@@ -132,7 +141,8 @@ public class Layer {
             for (int i = 0; i < currentSize; i++) {
                 double output = neurons[i].getValue();
                 double derivative = neurons[i].getActivationFunction().applyDerivative(lastRawInputs[i]);
-                currentDeltas[i] = (output - targets[i]) * derivative;
+                // Folie 10: Delta = f'(net) * (Zielwert - Ausgabe).
+                currentDeltas[i] = (targets[i] - output) * derivative;
             }
         } else {
             // Fall B: Versteckte Schicht (Hidden Layer) - Fehler von rechts aufteilen
@@ -147,22 +157,19 @@ public class Layer {
             }
         }
 
-        // Wenn dies die Input-Schicht ist (keine Gewichte nach links), sind wir fertig
-        if (weights == null) return null;
-
-        // 2. Gewichte und Biases anpassen (Gradient Descent)
-        int prevSize = lastInputs.length;
-
-
-        for (int i = 0; i < currentSize; i++) {
-            for (int j = 0; j < prevSize; j++) {
-                // Gewicht anpassen: W = W - (Lernrate * Delta * Input)
-                weights[i][j] -= learningRate * currentDeltas[i] * lastInputs[j];
-            }
-            // Bias anpassen (letztes Element in der Gewichtszeile)
-            weights[i][prevSize] -= learningRate * currentDeltas[i];
-        }
-
         return currentDeltas;
+    }
+
+    /** Delta-Regel mit optionalem Momentum; die letzte Spalte enthält den Bias. */
+    void updateWeights(double[] deltas, double learningRate, double momentum) {
+        int prevSize = lastInputs.length;
+        for (int i = 0; i < neurons.length; i++) {
+            for (int j = 0; j <= prevSize; j++) {
+                double input = j == prevSize ? 1.0 : lastInputs[j];
+                double update = momentum * previousUpdates[i][j] + learningRate * deltas[i] * input;
+                weights[i][j] += update;
+                previousUpdates[i][j] = update;
+            }
+        }
     }
 }

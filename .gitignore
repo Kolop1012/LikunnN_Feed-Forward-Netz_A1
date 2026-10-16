@@ -119,3 +119,6 @@ bin/
 .DS_Store
 
 /doc/build/
+
+# Lokale Hilfsdateien (z.B. PDF-Auswertung)
+/tmp/
