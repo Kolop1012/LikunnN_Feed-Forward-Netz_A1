@@ -5,8 +5,6 @@ Das Projekt dient als Lehr- und Demonstrationsimplementierung für die Grundlage
 des überwachten Lernens: Forward-Pass, Backpropagation, Momentum und adaptive
 Lernratensteuerung.
 
----
-
 ## Projektstruktur
 
 ```
@@ -29,8 +27,6 @@ LikunnN_Feed-Forward-Netz_A1/
 └── README.md
 ```
 
----
-
 ## Trainingsmodi
 
 | Modus      | Momentum | Lernrate    | Besonderheit                                                                                                                            |
@@ -42,8 +38,6 @@ LikunnN_Feed-Forward-Netz_A1/
 Nach jeder Epoche wird der mittlere `HalfSquaredError` über alle Muster
 ausgegeben. Am Ende zeigt die Demo pro Muster die Ausgabe, die
 klassifizierte Klasse und das Ziel, sowie die Trefferquote.
-
----
 
 ## Netzarchitektur
 
