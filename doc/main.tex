@@ -12,41 +12,71 @@
 
 % Absatz und Zeilenabstand
 \usepackage{ragged2e}
-\AtBeginDocument{\justifying}
+\justifying
+\usepackage{microtype}
+\hyphenation{Feed-Forward-Netz Back-pro-pa-ga-tion Ak-ti-vie-rungs-funk-ti-on}
 \usepackage{setspace}
 \onehalfspacing
 
 % Seitenformat
 \usepackage[
-    a4paper,
-    top=2cm, bottom=2cm, left=3cm, right=3cm,
-    marginparwidth=1.75cm
+	a4paper,
+	top=2.5cm,
+	bottom=2.5cm,
+	left=2.5cm,
+	right=2.5cm,
+	marginparwidth=1.75cm,
+	headheight=14pt
 ]{geometry}
 
 % Grafik
 \usepackage{tikz}
 \usetikzlibrary{positioning, arrows.meta, decorations.pathreplacing}
 \usepackage{graphicx}
-\usepackage{xcolor}
+
+% Farben und Boxen
 \usepackage{listings}
-\lstdefinestyle{projektjava}{
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{caption}
+\DeclareCaptionType{listing}[Listing][Listingsverzeichnis]
+\tcbuselibrary{listingsutf8, skins}
+
+\definecolor{codeframe}{HTML}{005EFF}
+
+
+\lstdefinestyle{java}{
     language=Java,
     basicstyle=\ttfamily\footnotesize,
     keywordstyle=\color{blue!55!black},
-    numbers=left,
-    numberstyle=\tiny\color{black!60},
-    numbersep=8pt,
     breaklines=true,
     breakatwhitespace=false,
     columns=fullflexible,
     keepspaces=true,
     showstringspaces=false,
     tabsize=4,
-    frame=single,
     captionpos=b,
     xleftmargin=1.5em,
     xrightmargin=0.5em
 }
+
+\newtcblisting[auto counter, number within=section]{javacode}[2][]{
+    enhanced,
+    colback=blue!4,
+    colframe=codeframe,
+    listing only,
+    listing engine=listings,
+    listing options={
+       style=java,
+    },
+    title={#2},
+    #1,
+}
+
+\newcommand{\JavaCodeCaption}[1]{%
+    \captionof{listing}{#1}%
+}
+
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 
@@ -90,4 +120,3 @@
 \printbibliography
 
 \end{document}
-

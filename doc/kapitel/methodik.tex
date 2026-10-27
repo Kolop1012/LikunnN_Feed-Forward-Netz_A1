@@ -57,13 +57,20 @@ aktualisierten Gewichten berechnet wird und damit nicht mehr zum
 Vorwärtsdurchlauf passt. Für die Eingabeschicht wird kein Delta benötigt,
 da dort keine eingehenden Gewichte trainiert werden.
 
-\lstinputlisting[
-    style=projektjava,
-    firstline=133, lastline=142,
-    caption={Berechnungsreihenfolge in \texttt{FFNeuralNetwork.train}
-        (Auszug aus der eigenen Implementierung).},
-    label={lst:bp-train}
-]{../src/main/java/NeuralNetwork/FFNeuralNetwork.java}
+\begin{javacode}[label={lst:bp-train}]{}
+	double[][] deltas = new double[layers.length][];
+	deltas[lastIndex] = layers[lastIndex].calculateDeltas(null, null, targets);
+	for (int i = lastIndex - 1; i > 0; i--) {
+			deltas[i] = layers[i].calculateDeltas(
+			deltas[i + 1], layers[i + 1].getWeights(), null);
+		}
+	for (int i = 1; i <= lastIndex; i++) {
+			layers[i].updateWeights(deltas[i], learningRate, momentum);
+		}
+	forwardReady = false;
+\end{javacode}
+\JavaCodeCaption{Berechnungsreihenfolge in \texttt{FFNeuralNetwork.train}
+	(Auszug aus der eigenen Implementierung).}
 
 Das Attribut \texttt{forwardReady} stellt im regulären Methodenablauf
 sicher, dass vor jedem Lernschritt ein gültiger Vorwärtsdurchlauf erfolgt.
@@ -80,13 +87,19 @@ die letzte Änderung. Die Berechnung von \texttt{update} entspricht damit
 Gleichung~\eqref{eq:bp-momentum} unter der negativen
 Delta-Konvention aus Gleichung~\eqref{eq:bp-delta-definition}.
 
-\lstinputlisting[
-    style=projektjava,
-    firstline=164, lastline=174,
-    caption={Parameterupdate mit Bias und optionalem Momentum in
-        \texttt{Layer.updateWeights} (eigene Implementierung).},
-    label={lst:bp-update}
-]{../src/main/java/NeuralNetwork/Layer.java}
+\begin{javacode}[label={lst:bp-update}]{}
+	void updateWeights(double[] deltas, double learningRate, double momentum) {
+			int prevSize = lastInputs.length;
+			for (int i = 0; i < neurons.length; i++) {
+					for (int j = 0; j <= prevSize; j++) {
+							double input = j == prevSize ? 1.0 : lastInputs[j];
+							double update = momentum * previousUpdates[i][j] + learningRate * deltas[i] * input;
+							weights[i][j] += update;
+							previousUpdates[i][j] = update;
+						}
+				}
+		}
+\end{javacode}
 
 Die Trainingsroutine ist auf die halbe Fehlerquadratsumme aus
 Gleichung~\eqref{eq:bp-loss} ausgelegt. Sie nimmt keine austauschbare
@@ -122,5 +135,3 @@ bedeutet eine ausreichende Verbesserung eine Abnahme um mehr als $10^{-5}$
 gegenüber dem gespeicherten Vergleichswert; die untere Lernratengrenze ist
 $0{,}01$. Diese Anpassung verändert die Schrittweite, während die
 Backpropagation-Gleichungen unverändert bleiben.
-
-\newpage

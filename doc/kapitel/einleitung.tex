@@ -1,14 +1,31 @@
 \section{Einleitung}
 \label{sec:einleitung}
 
-\newpage
+\subsection{Aufgabenstellung}
+Im Rahmen der Lehrveranstaltung \emph{Lernen in natürlichen und künstlichen neuronalen Netzen} wurde die Aufgabe gestellt, ein einfaches Feed-Forward-Netz mit überwachter Lernstrategie eigenständig zu implementieren. Das Netz soll in der Lage sein, dreidimensionale Eingabemuster (drei kontinuierliche Merkmale) einer von drei vorgegebenen Klassen zuzuordnen. Die Umsetzung umfasst die vollständige Pipeline von der Datenaufbereitung über die Vorwärts- und Rückwärtspropagation bis hin zur Auswertung der Klassifikationsleistung. Der vollständige Quellcode sowie die Dokumentation sind im öffentlichen Repository unter \url{https://github.com/Kolop1012/LikunnN_Feed-Forward-Netz_A1} einsehbar.
 
-\subsection{Repository}
+\subsection{Zielsetzung}
+Ziel des Projekts ist es, ein funktionsfähiges, aber bewusst schlank gehaltenes neuronales Netz zu entwickeln, das den gesamten Lernzyklus (Init, Forward-Pass, Fehlerberechnung, Backpropagation, Gewichts-Update) selbst implementiert ohne auf Frameworks zurückzugreifen. Dadurch soll ein vertieftes Verständnis der zugrundeliegenden mathematischen Zusammenhänge erreicht werden.
 
-Der vollständige Quellcode des Projekts ist öffentlich auf GitHub verfügbar:
+\subsection{Aufgabenkontext}
+Das Projekt entstand im Rahmen des Moduls \emph{Lernen in natürlichen und künstlichen neuronalen Netzen} im Studiengang \emph{Informatik}. Es wurde als Gruppenarbeit über einen Zeitraum von vier Wochen bearbeitet. Die Abgabe umfasst sowohl den lauffähigen Code als auch diesen Projektbericht. Die Bewertung orientiert sich an der im SW02 veröffentlichten Bewertungsmatrix (formale Vorgaben, wissenschaftlicher Schreibstil, Nachvollziehbarkeit der Umsetzung, Diskussion der Vor- und Nachteile).
 
-\begin{center}
-	\href{https://github.com/Kolop1012/LikunnN_Feed-Forward-Netz_A1}{github.com/Kolop1012/LikunnN\_Feed-Forward-Netz\_A1}
-\end{center}
+\subsection{Externe Vorgaben}
+Folgende Vorgaben wurden von Seiten der Lehrveranstaltung gemacht und im Projekt berücksichtigt:
+\begin{itemize}
+	\item Implementierung eines \emph{Feed-Forward-Netzes} mit mindestens einer versteckten Schicht.
+	\item Überwachtes Lernen mittels \emph{Backpropagation}.
+	\item Klassifikation von drei vorgegebenen Klassen.
+	\item Seitenumfang des Berichts: 10 Seiten (\(\pm\) 1).
+	\item Schrift: Times (12\,pt) oder Arial (11\,pt), Zeilenabstand 1,5, Rand 2,5\,cm, Blocksatz mit Silbentrennung.
+	\item Verpflichtende Literaturrecherche und Angabe aller Quellen.
+\end{itemize}
 
-\newpage
+\subsection{Ermessensentscheidungen}
+Über die externen Vorgaben hinausgehend wurden folgende Entscheidungen eigenständig im Projektteam getroffen:
+\begin{itemize}
+	\item Verwendung der \emph{halben Fehlerquadratsumme} als Fehlerfunktion (statt Kreuzentropie), da sie mathematisch einfacher herzuleiten ist und für die kleine Netzarchitektur ausreichend konvergiert.
+	\item Wahl der \emph{logistischen Sigmoidfunktion} als Aktivierungsfunktion in allen Schichten (statt ReLU), weil sie differenzierbar ist und die Ausgaben natürlicherweise auf $(0,1)$ beschränkt bleiben.
+	\item Feste Lernrate von \(\eta = 0{,}1\) mit manuell gewählter Epochengrenze (kein Early Stopping), um den Lernverlauf im Bericht transparent dokumentieren zu können.
+	\item Aufteilung der Trainings- und Testdaten im Verhältnis \(80{:}20\) mittels zufälliger Permutation mit festem Seed (Reproduzierbarkeit).
+\end{itemize}
