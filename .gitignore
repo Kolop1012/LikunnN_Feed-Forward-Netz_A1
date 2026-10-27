@@ -24,6 +24,7 @@
 *.xdv
 *.dvi
 *.ps
+*.listing
 
 # Glossare und Abkürzungen
 *.acn
