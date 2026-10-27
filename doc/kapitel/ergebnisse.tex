@@ -1,6 +1,44 @@
 \section{Ergebnisse}
 \label{sec:ergebnisse}
 
+\subsection{Korrektheitsprüfung der Backpropagation}
+\label{sec:backpropagation-pruefung}
 
+Die vorhandene Testklasse \texttt{TestFFNeuralNetwork} überprüft die
+Backpropagation unter anderem mit einem numerischen Gradientenvergleich.
+Dazu wird jeder Parameter $\theta$, einschließlich der Bias-Werte, einzeln
+um $\varepsilon=10^{-6}$ erhöht beziehungsweise verringert. Die zentrale
+Differenz
+\begin{equation}
+    g_{\mathrm{num}}(\theta)
+      = \frac{E(\theta+\varepsilon)-E(\theta-\varepsilon)}
+             {2\varepsilon}
+    \label{eq:bp-gradient-check}
+\end{equation}
+nähert die Ableitung an, während alle anderen Parameter unverändert
+bleiben. Der Test führt anschließend einen Lernschritt ohne Momentum mit
+$\eta=0{,}05$ durch und rekonstruiert den implementierten Gradienten als
+$g_{\mathrm{impl}}=(\theta_{\mathrm{vorher}}-
+\theta_{\mathrm{nachher}})/\eta$. Beide Werte müssen bis auf eine absolute
+Toleranz von $10^{-7}$ übereinstimmen. Damit wird die tatsächliche
+Parameteränderung gegen eine unabhängig aus Fehlerauswertungen berechnete
+Näherung geprüft.
+
+Die Gradientenprüfungen umfassen die Aktivierungsfunktionen Linear,
+Sigmoid, Tanh und ReLU sowie unterschiedliche Topologien. Das
+Sigmoid-Testnetz $2$--$3$--$2$--$3$ prüft insbesondere die Fehlerrückführung
+über mehrere verborgene Schichten und mehrere Ausgaben. Im ReLU-Test
+werden positive Eingabesummen gewählt, um die nicht differenzierbare
+Stelle bei null zu vermeiden. Ein weiterer Test überprüft Momentum über
+zwei aufeinanderfolgende Lernschritte einschließlich der Bias-Änderungen.
+
+Bei der Prüfung des hier beschriebenen Quellcodestands wurden alle $13$
+vorhandenen Testgruppen erfolgreich ausgeführt. Dazu gehören auch drei
+XOR-Tests für die Varianten ohne Momentum, mit Momentum und mit zusätzlicher
+Lernratenanpassung. Nach jeweils $10\,000$ Epochen klassifizierten diese
+Tests alle vier Trainingsmuster korrekt und erfüllten die geprüfte
+Fehlerschranke $\overline{E}<0{,}001$. Diese Ergebnisse belegen das
+Verhalten für die gewählten Testfälle und den festen Startwert $42$; sie
+stellen keinen allgemeinen Konvergenznachweis dar.
 
 \newpage

@@ -1,4 +1,33 @@
 \section{Diskussion}
 \label{sec:diskussion}
 
+\subsection{Einordnung der Backpropagation-Implementierung}
+
+Die Aufteilung in Vorwärtsrechnung, Delta-Berechnung und Parameterupdate
+macht die Umsetzung mit den Formeln aus
+Abschnitt~\ref{sec:backpropagation} vergleichbar. Insbesondere die getrennten
+Schleifen für Deltas und Gewichtsänderungen stellen einen einheitlichen
+Parameterstand innerhalb eines Lernschritts sicher. Bei einer Gesamtzahl
+von $P$ Gewichten einschließlich der Bias-Werte benötigen Vorwärtsrechnung,
+Rückwärtsrechnung und Update jeweils $\mathcal{O}(P)$ Rechenoperationen pro
+Muster: Jede Verbindung wird pro Durchlauf nur eine konstante Anzahl von
+Malen verarbeitet. Diese Abschätzung folgt aus den Schleifen im Quellcode;
+eine Laufzeitmessung ist damit nicht verbunden.
+
+Die Gradientenprüfungen aus Abschnitt~\ref{sec:backpropagation-pruefung}
+stützen die Korrektheit der getesteten Lernschritte. Die XOR-Tests erfassen
+darüber hinaus das Zusammenspiel über viele Epochen. Da die Demo jedoch
+dieselben vier Muster zum Trainieren und zur abschließenden Bewertung
+verwendet, lässt sich daraus keine allgemeine Aussage über die
+Generalisierung auf unbekannte Daten ableiten. Für eine solche Bewertung
+müssten Trainings-, Validierungs- und Testdaten getrennt werden
+\parencite[Folie~15]{vietenBackpropagation}.
+
+Eine weitere Grenze ist die feste Kopplung des Trainings an die halbe
+Fehlerquadratsumme. Eine austauschbare Fehlerfunktion müsste zusätzlich
+ihre passende Ableitung bereitstellen. Auch ein Vergleich der drei
+Trainingsvarianten erfordert weitere Experimente: Das Bestehen derselben
+XOR-Tests allein zeigt noch nicht, welche Variante schneller oder über
+verschiedene Initialisierungen zuverlässiger lernt.
+
 \newpage

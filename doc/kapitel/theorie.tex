@@ -3,6 +3,153 @@
 
 \subsection{Was ist ein künstliches neuronales Netz?}
 
+Ein künstliches neuronales Netz beschreibt eine parametrisierte Abbildung von
+Eingabewerten auf Ausgabewerte. Bei einem mehrschichtigen Feed-Forward-Netz
+werden die Eingaben schrittweise durch eine oder mehrere verborgene Schichten
+zur Ausgabeschicht verarbeitet. Jedes verarbeitende Neuron bildet eine gewichtete
+Summe seiner Eingaben, ergänzt einen Bias und wendet eine Aktivierungsfunktion
+an. Beim überwachten Lernen stehen zu den Eingaben gewünschte Ausgaben zur
+Verfügung. Die Gewichte und Bias-Werte werden anhand dieser Beispiele
+angepasst \parencite[Folien~4 und~6]{vietenBackpropagation}.
 
+\subsection{Backpropagation}
+\label{sec:backpropagation}
+
+Für die Ausgabeschicht kann die berechnete Ausgabe unmittelbar mit dem
+Zielwert verglichen werden. Für die verborgenen Neuronen fehlen solche
+Zielwerte. Backpropagation löst dieses Problem, indem der Einfluss der
+Netzparameter auf den Ausgabefehler mithilfe der Kettenregel rückwärts durch
+das Netz berechnet wird. Dabei entstehen keine zusätzlichen Trainingsziele
+für die verborgenen Schichten, sondern Ableitungen der Fehlerfunktion.
+Rumelhart, Hinton und Williams beschreiben, wie auf dieser Grundlage auch
+verborgene Neuronen für die Aufgabe geeignete interne Repräsentationen
+erlernen können \parencite{rumelhart1986}. Backpropagation bezeichnet dabei
+die Berechnung des Gradienten; die anschließende Parameteränderung erfolgt
+durch ein Optimierungsverfahren wie den Gradientenabstieg
+\parencite[Abschn.~6.5]{goodfellow2016}.
+
+\subsubsection{Vorwärtsrechnung und Fehlerfunktion}
+
+Im Folgenden bezeichnet $l=0$ die Eingabeschicht und $l=L$ die Ausgabeschicht.
+Die Schicht $l$ besitzt $n_l$ Neuronen. Das Gewicht $w_{ij}^{(l)}$ verbindet
+Neuron $j$ der vorherigen Schicht mit Neuron $i$ der aktuellen Schicht;
+$b_i^{(l)}$ ist dessen Bias. Für eine Eingabe $\boldsymbol{x}$ gilt
+$\boldsymbol{a}^{(0)}=\boldsymbol{x}$. Die Vorwärtsrechnung lautet
+\begin{equation}
+    z_i^{(l)} = \sum_{j=1}^{n_{l-1}} w_{ij}^{(l)} a_j^{(l-1)} + b_i^{(l)},
+    \qquad a_i^{(l)} = f\!\left(z_i^{(l)}\right).
+    \label{eq:bp-forward}
+\end{equation}
+Hierbei ist $z_i^{(l)}$ die gewichtete Eingabesumme vor der Aktivierung und
+$a_i^{(l)}$ der Aktivierungswert. Diese Notation unterscheidet somit zwischen
+dem Argument der Aktivierungsfunktion und ihrem Ergebnis
+\parencite[Kap.~2]{nielsen2015}.
+
+Passend zur Implementierung wird für ein einzelnes Trainingsmuster mit
+Zielvektor $\boldsymbol{y}$ die halbe Fehlerquadratsumme verwendet:
+\begin{equation}
+    E = \frac{1}{2}\sum_{i=1}^{n_L}\left(y_i-a_i^{(L)}\right)^2.
+    \label{eq:bp-loss}
+\end{equation}
+Der Faktor $1/2$ vereinfacht die Ableitung, da er den beim Differenzieren des
+Quadrats entstehenden Faktor $2$ aufhebt. Daraus ergibt sich
+$\partial E/\partial a_i^{(L)}=a_i^{(L)}-y_i$. Es wird hier über die
+Ausgabeneuronen summiert und nicht gemittelt. Für einen Datensatz mit $N$
+Mustern wird zur Bewertung dagegen der mittlere Musterfehler
+$\overline{E}=N^{-1}\sum_{p=1}^{N}E_p$ betrachtet, wobei $E_p$ den Fehler
+des Musters $p$ bezeichnet. Einzelner Musterfehler und mittlerer
+Datensatzfehler sind daher zu unterscheiden.
+
+\subsubsection{Fehlersignale der Ausgabe- und verborgenen Schichten}
+
+Entsprechend der Delta-Regel der Lehrveranstaltung und dem Vorzeichen im
+Quellcode wird das Fehlersignal definiert als
+\begin{equation}
+    \delta_i^{(l)} := -\frac{\partial E}{\partial z_i^{(l)}}.
+    \label{eq:bp-delta-definition}
+\end{equation}
+Damit ergibt sich für ein Ausgabeneuron durch Anwendung der Kettenregel
+\begin{equation}
+    \delta_i^{(L)}
+    = -\frac{\partial E}{\partial a_i^{(L)}}
+        \frac{\partial a_i^{(L)}}{\partial z_i^{(L)}}
+    = \left(y_i-a_i^{(L)}\right) f'\!\left(z_i^{(L)}\right).
+    \label{eq:bp-output-delta}
+\end{equation}
+Die Ausgabedifferenz wird also mit der lokalen Ableitung der
+Aktivierungsfunktion gewichtet \parencite[Folie~10]{vietenBackpropagation}.
+Nielsen verwendet hingegen $\delta=\partial E/\partial z$ und damit das
+entgegengesetzte Vorzeichen. Beide Konventionen führen bei entsprechendem
+Vorzeichen des Gewichtsupdates zum gleichen Gradientenabstieg
+\parencite[Kap.~2]{nielsen2015}.
+
+Ein verborgenes Neuron beeinflusst den Fehler über alle Neuronen der nächsten
+Schicht. Die Kettenregel liefert deshalb eine Summe über diese Nachfolger:
+\begin{equation}
+    \delta_i^{(l)}
+    = f'\!\left(z_i^{(l)}\right)
+      \sum_{k=1}^{n_{l+1}} w_{ki}^{(l+1)}\delta_k^{(l+1)},
+    \qquad l=L-1,\ldots,1.
+    \label{eq:bp-hidden-delta}
+\end{equation}
+Jedes nachfolgende Fehlersignal geht mit dem zugehörigen Verbindungsgewicht
+ein. Anschließend wird die Ableitung des betrachteten Neurons berücksichtigt.
+Die Berechnung beginnt somit an der Ausgabeschicht und setzt sich bis zur
+ersten verborgenen Schicht fort
+\parencite[Folien~10 und~12]{vietenBackpropagation}.
+
+In der Demo wird die Sigmoid-Funktion eingesetzt. Für sie gilt
+\begin{equation}
+    f(z)=\frac{1}{1+\exp(-z)},
+    \qquad f'(z)=f(z)\bigl(1-f(z)\bigr).
+    \label{eq:bp-sigmoid}
+\end{equation}
+Ihre Ableitung ist bei stark positiven oder negativen Eingabesummen klein.
+Dadurch können auch bei einer deutlichen Abweichung vom Zielwert nur kleine
+Fehlersignale entstehen; das Lernen kann sich verlangsamen
+\parencite[Kap.~2]{nielsen2015}.
+
+\subsubsection{Gewichtsänderung und Momentum}
+
+Aus Gleichung~\eqref{eq:bp-forward} und der Definition des Fehlersignals folgt
+\begin{equation}
+    \frac{\partial E}{\partial w_{ij}^{(l)}}
+        = -\delta_i^{(l)}a_j^{(l-1)},
+    \qquad
+    \frac{\partial E}{\partial b_i^{(l)}} = -\delta_i^{(l)}.
+    \label{eq:bp-gradients}
+\end{equation}
+Ein Schritt entgegen dem Gradienten mit Lernrate $\eta>0$ lautet daher
+\begin{equation}
+    w_{ij}^{(l)} \leftarrow w_{ij}^{(l)}
+        + \eta\,\delta_i^{(l)}a_j^{(l-1)},
+    \qquad
+    b_i^{(l)} \leftarrow b_i^{(l)} + \eta\,\delta_i^{(l)}.
+    \label{eq:bp-update}
+\end{equation}
+Das Pluszeichen ist eine Folge der gewählten Definition von $\delta$ und
+entspricht der Lernregel der Vorlesung
+\parencite[Folie~10]{vietenBackpropagation}. Der Bias lässt sich als Gewicht
+einer konstanten Eingabe $1$ auffassen und mit derselben Regel aktualisieren.
+Alle Fehlersignale eines Musters müssen dabei mit den Gewichten berechnet
+werden, die auch im zugehörigen Vorwärtsdurchlauf verwendet wurden.
+
+Optional berücksichtigt das Projekt die vorherige Parameteränderung durch
+Momentum. Für einen beliebigen Netzparameter $\theta$, also ein Gewicht oder
+einen Bias, wird im Lernschritt $t$ berechnet:
+\begin{equation}
+    \Delta\theta_t
+       = \mu\,\Delta\theta_{t-1}
+         -\eta_t\frac{\partial E_t}{\partial\theta},
+    \qquad
+    \theta_{t+1}=\theta_t+\Delta\theta_t.
+    \label{eq:bp-momentum}
+\end{equation}
+Dabei bezeichnet $E_t$ den Fehler des aktuell bearbeiteten Musters,
+$\mu\in[0,1)$ den Momentum-Faktor und $\Delta\theta_{t-1}$ die zuletzt
+gespeicherte Änderung; diese ist vor dem ersten Schritt null. Für $\mu=0$
+entsteht der gewöhnliche Gradientenabstieg. Momentum kann das Lernen bei
+wiederholt ähnlicher Gradientenrichtung beschleunigen und Schwingungen
+verringern \parencite[Abschn.~8.3.2]{goodfellow2016}.
 
 \newpage
