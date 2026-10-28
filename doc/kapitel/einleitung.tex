@@ -4,6 +4,8 @@
 \subsection{Aufgabenstellung}
 Im Rahmen der Lehrveranstaltung \emph{Lernen in natürlichen und künstlichen neuronalen Netzen} wurde die Aufgabe gestellt, ein einfaches Feed-Forward-Netz mit überwachter Lernstrategie eigenständig zu implementieren. Das Netz soll in der Lage sein, dreidimensionale Eingabemuster (drei kontinuierliche Merkmale) einer von drei vorgegebenen Klassen zuzuordnen. Die Umsetzung umfasst die vollständige Pipeline von der Datenaufbereitung über die Vorwärts- und Rückwärtspropagation bis hin zur Auswertung der Klassifikationsleistung. Der vollständige Quellcode sowie die Dokumentation sind im öffentlichen Repository unter \url{https://github.com/Kolop1012/LikunnN_Feed-Forward-Netz_A1} einsehbar.
 
+Der vorliegende Bericht dokumentiert die tatsächlich implementierte und ausgewertete Teilaufgabe: das binäre XOR-Problem mit zwei Eingängen, einer Ausgabe und der Netzarchitektur 2--4--1. Die in der ursprünglichen Aufgabenbeschreibung geforderte Klassifikation dreidimensionaler Muster in drei Klassen wurde in dieser Umsetzung nicht realisiert. Methodik und Ergebnisse beziehen sich daher ausschließlich auf das XOR-Problem; eine Erfüllung der ursprünglichen Klassifikationsvorgabe wird nicht beansprucht.
+
 \subsection{Zielsetzung}
 Ziel des Projekts ist es, ein funktionsfähiges, aber bewusst schlank gehaltenes neuronales Netz zu entwickeln, das den gesamten Lernzyklus (Init, Forward-Pass, Fehlerberechnung, Backpropagation, Gewichts-Update) selbst implementiert ohne auf Frameworks zurückzugreifen. Dadurch soll ein vertieftes Verständnis der zugrundeliegenden mathematischen Zusammenhänge erreicht werden.
 
@@ -27,5 +29,5 @@ Folgende Vorgaben wurden von Seiten der Lehrveranstaltung gemacht und im Projekt
 	\item Verwendung der \emph{halben Fehlerquadratsumme} als Fehlerfunktion (statt Kreuzentropie), da sie mathematisch einfacher herzuleiten ist und für die kleine Netzarchitektur ausreichend konvergiert.
 	\item Wahl der \emph{logistischen Sigmoidfunktion} als Aktivierungsfunktion in allen Schichten (statt ReLU), weil sie differenzierbar ist und die Ausgaben natürlicherweise auf $(0,1)$ beschränkt bleiben.
 	\item Feste Lernrate von \(\eta = 0{,}1\) mit manuell gewählter Epochengrenze (kein Early Stopping), um den Lernverlauf im Bericht transparent dokumentieren zu können.
-	\item Aufteilung der Trainings- und Testdaten im Verhältnis \(80{:}20\) mittels zufälliger Permutation mit festem Seed (Reproduzierbarkeit).
+	\item Verwendung aller vier XOR-Muster als Trainings- und Bewertungsdaten. Ein separater Testdatensatz wurde nicht eingesetzt; die Ergebnisse erlauben daher keine Aussage zur Generalisierung auf unbekannte Daten.
 \end{itemize}

@@ -61,7 +61,7 @@ Wie die Messungen belegen, reduzierte sich der mittlere Fehler $\overline{E}$ vo
             legend pos=north east
         ]
         % Der Pfad zur CSV muss stimmen. Spaltennamen anpassen falls nötig (Epoch, Loss)
-        \addplot[color=blue, thick] table [x=Epoch, y=Loss, col sep=comma] {data/loss_history.csv};
+        \addplot[color=blue, thick] table [x=Epoch, y=Loss, col sep=comma] {kapitel/data/loss_history.csv};
         \addlegendentry{SGD (Lernrate 1.0)}
         \end{axis}
     \end{tikzpicture}
@@ -71,50 +71,68 @@ Wie die Messungen belegen, reduzierte sich der mittlere Fehler $\overline{E}$ vo
 
 \begin{figure}[htbp]
     \centering
+    % 1. Visualisierung des Netzwerks
     \begin{tikzpicture}[
-        neuron/.style={circle, draw, minimum size=1.1cm, thick, fill=white, font=\small},
-        bias/.style={circle, draw, minimum size=0.8cm, thick, fill=gray!20, font=\small},
-        arrow/.style={->, >=stealth, thick, color=black!70}
+        neuron/.style={circle, draw, minimum size=1.1cm, thick, font=\small},
+        arrow/.style={->, >=stealth, color=black!80}
     ]
     
-    % Input Layer
-    \node[neuron] (I1) at (0, 1.5) {$x_1$};
-    \node[neuron] (I2) at (0, -1.5) {$x_2$};
-    \node[bias] (B1) at (0, 3.5) {$1$};
+    % Input Layer (Kein Bias, neutral weiß)
+    \node[neuron, fill=white] (I1) at (0, 1.2) {$x_1$};
+    \node[neuron, fill=white] (I2) at (0, -1.2) {$x_2$};
     
-    % Hidden Layer
-    \node[neuron] (H1) at (4, 3) {$h_1$};
-    \node[neuron] (H2) at (4, 1) {$h_2$};
-    \node[neuron] (H3) at (4, -1) {$h_3$};
-    \node[neuron] (H4) at (4, -3) {$h_4$};
-    \node[bias] (B2) at (4, 5) {$1$};
+    % Hidden Layer (Graustufen entsprechend Bias: dunkel = negativ, weiß = positiv)
+    % Bias h1 = -0.911 -> black!40
+    % Bias h2 = +6.664 -> black!0 (weiß)
+    % Bias h3 = +3.174 -> black!20
+    % Bias h4 = +2.897 -> black!22
+    \node[neuron, fill=black!40] (H1) at (4, 2.25) {};
+    \node[neuron, fill=black!0]  (H2) at (4, 0.75) {};
+    \node[neuron, fill=black!20] (H3) at (4, -0.75) {};
+    \node[neuron, fill=black!22] (H4) at (4, -2.25) {};
     
     % Output Layer
-    \node[neuron] (O1) at (8, 0) {$y$};
+    % Bias y = -5.918 -> sehr dunkel (black!80), Schriftfarbe weiß (Gegenteil)
+    \node[neuron, fill=black!80, text=white] (O1) at (8, 0) {$y$};
     
-    % Verbindungen Input -> Hidden
-    \foreach \i in {1,2}
-        \foreach \h in {1,2,3,4}
-            \draw[arrow] (I\i) -- (H\h);
-            
-    % Bias1 -> Hidden (mit Werten aus der letzten Spalte von Layer 1)
-    \draw[arrow, dashed] (B1) -- node[above, sloped, font=\tiny] {-0.911} (H1);
-    \draw[arrow, dashed] (B1) -- node[above, sloped, font=\tiny] {6.664} (H2);
-    \draw[arrow, dashed] (B1) -- node[below, sloped, font=\tiny] {3.174} (H3);
-    \draw[arrow, dashed] (B1) -- node[below, sloped, font=\tiny] {2.897} (H4);
+    % Input x1 -> Hidden (Liniendicke skaliert mit |w|)
+    \draw[arrow, line width=0.6pt] (I1) -- (H1);
+    \draw[arrow, line width=1.5pt] (I1) -- (H2);
+    \draw[arrow, line width=1.0pt] (I1) -- (H3);
+    \draw[arrow, line width=2.0pt] (I1) -- (H4);
 
-    % Verbindungen Hidden -> Output (mit Werten aus Layer 2)
-    \draw[arrow] (H1) -- node[above, sloped, font=\tiny] {2.193} (O1);
-    \draw[arrow] (H2) -- node[above, sloped, font=\tiny] {8.418} (O1);
-    \draw[arrow] (H3) -- node[below, sloped, font=\tiny] {3.569} (O1);
-    \draw[arrow] (H4) -- node[below, sloped, font=\tiny] {-11.720} (O1);
-        
-    % Bias2 -> Output
-    \draw[arrow, dashed] (B2) -- node[above, sloped, font=\tiny] {-5.918} (O1);
+    % Input x2 -> Hidden
+    \draw[arrow, line width=1.0pt] (I2) -- (H1);
+    \draw[arrow, line width=1.4pt] (I2) -- (H2);
+    \draw[arrow, line width=0.7pt] (I2) -- (H3);
+    \draw[arrow, line width=2.0pt] (I2) -- (H4);
+
+    % Hidden -> Output
+    \draw[arrow, line width=0.8pt] (H1) -- (O1);
+    \draw[arrow, line width=2.4pt] (H2) -- (O1);
+    \draw[arrow, line width=1.2pt] (H3) -- (O1);
+    \draw[arrow, line width=3.2pt] (H4) -- (O1);
 
     \end{tikzpicture}
-    \caption{Visualisierung der 2--4--1 Netzarchitektur mit den gelernten Bias- und Verbindungsgewichten nach $10\,000$ Epochen.}
+
+    \vspace{0.6cm}
+
+    % 2. Tabelle aller Gewichte und Biase
+    \small
+    \begin{tabular}{l c c c c c c c}
+        \toprule
+        \textbf{Schicht / Neuron} & \textbf{Gewicht $x_1$} & \textbf{Gewicht $x_2$} & \textbf{Gewicht $h_1$} & \textbf{Gewicht $h_2$} & \textbf{Gewicht $h_3$} & \textbf{Gewicht $h_4$} & \textbf{Bias $b$} \\
+        \midrule
+        Hidden Neuron 1 & $1{,}221$ & $-2{,}864$ & -- & -- & -- & -- & $-0{,}911$ \\
+        Hidden Neuron 2 & $-4{,}624$ & $-4{,}370$ & -- & -- & -- & -- & $6{,}664$ \\
+        Hidden Neuron 3 & $-2{,}850$ & $-1{,}736$ & -- & -- & -- & -- & $3{,}174$ \\
+        Hidden Neuron 4 & $-6{,}830$ & $-6{,}926$ & -- & -- & -- & -- & $2{,}897$ \\
+        \midrule
+        Output Neuron $y$ & -- & -- & $2{,}193$ & $8{,}418$ & $3{,}569$ & $-11{,}720$ & $-5{,}918$ \\
+        \bottomrule
+    \end{tabular}
+
+    \caption{Visualisierung der 2--4--1 Netzarchitektur sowie Übersicht der gelernten Parameter. Die Liniendicke entspricht dem Betrag der Verbindungsgewichte. Die Graustufe der Neuronen repräsentiert deren Bias-Wert (dunkel = stark negativ, weiß = stark positiv).}
     \label{fig:netz_architektur_gewichte}
 \end{figure}
-
 \newpage
