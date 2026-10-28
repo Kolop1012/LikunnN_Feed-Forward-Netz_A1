@@ -1,13 +1,17 @@
 # LikunnN_Feed-Forward-Netz_A1
 
+[![PDF-Bericht](https://img.shields.io/badge/📄_Projektbericht-PDF-red)](doc/main.pdf)
+
 Ein kleines, abhängigkeitsfreies **Feed-Forward-Neuronales Netz** in reinem Java.
 Das Projekt dient als Lehr- und Demonstrationsimplementierung für die Grundlagen
 des überwachten Lernens: Forward-Pass, Backpropagation, Momentum und adaptive
 Lernratensteuerung.
 
+> **Projektbericht:** [doc/main.pdf](doc/main.pdf)
+
 ## Projektstruktur
 
-```
+```text
 LikunnN_Feed-Forward-Netz_A1/
 ├── data/                          # Trainingsdaten (CSV)
 │   └── xor.csv
