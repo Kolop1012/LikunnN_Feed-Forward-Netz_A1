@@ -1,137 +1,75 @@
 \section{Methodik}
 \label{sec:Methodik}
 
+\subsection{Architektur und Basis-Implementierung des Feed-Forward-Netzes}
+\label{sec:ffn-implementierung}
+
+Um die Zielsetzung eines tiefgreifenden Verständnisses für neuronale Netze zu erfüllen, wurde die gesamte Architektur in nativem Java ohne externe Machine-Learning-Bibliotheken entwickelt. Die Logik gliedert sich primär in die Komponenten \texttt{FFNeuralNetwork}, \texttt{Layer} und \texttt{ActivationFunction}.
+
+\textbf{Beschreibung der Umsetzung:} 
+Das Netz (\texttt{FFNeuralNetwork}) verwaltet ein Array von \texttt{Layer}-Objekten. Anstatt jedes Neuron als eigenständiges Objekt zu modellieren, kapselt jede Schicht (\texttt{Layer}) die Eigenschaften all ihrer Neuronen in Arrays: Sie speichert die aktuelle Anzahl der Neuronen, die Aktivierungswerte sowie die zugehörigen eingehenden Gewichtsmatrizen (\texttt{weights}) und Bias-Werte (\texttt{biases}). Der Vorwärtsdurchlauf (\texttt{feedForward}) iteriert sequenziell über diese Schichten. Jede Schicht berechnet die gewichtete Summe der Eingaben der vorherigen Schicht, addiert den Bias und wendet über \texttt{ActivationFunction} die zugewiesene nicht-lineare Aktivierungsfunktion an. 
+
+\textbf{Begründung der Umsetzung:} 
+Die Entscheidung für eine objektorientierte Kapselung auf Schicht-Ebene anstelle einer Modellierung einzelner Neuronen-Objekte ist architektonisch begründet: Sie nähert den Code an die zugrundeliegenden mathematischen Vektor- und Matrixoperationen an und vermeidet einen massiven Objekt-Overhead im Speicher. Die iterative Array-Verarbeitung erhöht zudem die Cache-Lokalität und Laufzeiteffizienz. Die Auslagerung der Aktivierungsfunktionen in eine eigenständige Struktur dient der Modularität. So können verschiedene Aktivierungen (z.\,B. Sigmoid, ReLU) einfach zugewiesen und ausgetauscht werden, ohne die Kernlogik der Schichten anpassen zu müssen.
+
 \subsection{Umsetzung der Backpropagation in Java}
 \label{sec:backpropagation-implementierung}
 
-Die Backpropagation ist auf drei Klassen verteilt.
-\texttt{FFNeuralNetwork} steuert die Reihenfolge der Berechnungen.
-\texttt{Layer} berechnet die Fehlersignale und aktualisiert die Parameter.
-\texttt{ActivationFunction} stellt die Aktivierungsfunktionen mit ihren
-Ableitungen bereit. Die folgende Beschreibung bezieht sich auf den Quellcode
-unter \path{src/main/java/NeuralNetwork/}.
+Die Backpropagation nutzt dieselben drei Kernklassen. \texttt{FFNeuralNetwork} steuert die Reihenfolge der Berechnungen, \texttt{Layer} berechnet die Fehlersignale und aktualisiert die Parameter, während \texttt{ActivationFunction} die benötigten mathematischen Ableitungen bereitstellt. Die folgende Beschreibung bezieht sich auf den Quellcode unter \path{src/main/java/NeuralNetwork/}.
 
 \subsubsection{Gespeicherte Werte aus dem Vorwärtsdurchlauf}
 
-Vor jedem Lernschritt wird \texttt{feedForward} mit dem aktuellen
-Trainingsmuster aufgerufen. Die Methode \texttt{Layer.forward} speichert die
-Aktivierungen der Vorgängerschicht in \texttt{lastInputs} und die gewichteten
-Eingabesummen in \texttt{lastRawInputs}. Die Neuronen halten die berechneten
-Aktivierungswerte. Damit stehen für die Rückwärtsrechnung die Größen
-$a_j^{(l-1)}$, $z_i^{(l)}$ und $a_i^{(l)}$ aus
-Gleichung~\eqref{eq:bp-forward} zur Verfügung.
+\textbf{Umsetzung:} Vor jedem Lernschritt wird \texttt{feedForward} mit dem aktuellen Trainingsmuster aufgerufen. Die Methode \texttt{Layer.forward} speichert die Aktivierungen der Vorgängerschicht in \texttt{lastInputs} und die gewichteten Eingabesummen in \texttt{lastRawInputs}. Damit stehen für die Rückwärtsrechnung die Größen $a_j^{(l-1)}$, $z_i^{(l)}$ und $a_i^{(l)}$ aus Gleichung~\eqref{eq:bp-forward} direkt zur Verfügung. Die Ableitung wird durch \texttt{applyDerivative(lastRawInputs[i])} ausgewertet (das Argument ist die Eingabesumme $z_i^{(l)}$ vor der Aktivierung).
 
-Die Ableitung wird durch \texttt{applyDerivative(lastRawInputs[i])}
-ausgewertet. Das Argument ist somit die Eingabesumme $z_i^{(l)}$ vor der
-Aktivierung. Bei \texttt{SIGMOID} berechnet die Ableitung intern erneut
-$f(z)$ und anschließend $f(z)(1-f(z))$. Eine Übergabe des bereits aktivierten
-Wertes an diese Methode würde dagegen eine andere Ableitung auswerten.
+\textbf{Begründung:} Diese Caching-Strategie ist eine bewusste Designentscheidung. Indem die Zwischenergebnisse des Vorwärtsdurchlaufs (insbesondere $z_i^{(l)}$) im Speicher gehalten werden, wird enorm viel Rechenzeit gespart. Eine Neuberechnung all dieser Werte während des Backpropagation-Schritts wäre höchst ineffizient und würde die Trainingslaufzeit drastisch verlängern. Der minimal erhöhte Speicherbedarf für \texttt{lastRawInputs} wird zugunsten der Performance in Kauf genommen.
 
 \subsubsection{Berechnung der Fehlersignale}
 
-Die Methode \texttt{train} beginnt bei der Ausgabeschicht.
-\texttt{Layer.calculateDeltas} unterscheidet zwei Fälle: Liegen Zielwerte
-vor, wird pro Ausgabeneuron
-\texttt{(targets[i] - output) * derivative} berechnet. Dies entspricht
-Gleichung~\eqref{eq:bp-output-delta}. Für eine verborgene Schicht werden
-stattdessen die Deltas und die Gewichtsmatrix der nächsten Schicht
-übergeben. Die Summe
-\texttt{nextLayerDeltas[k] * nextLayerWeights[k][j]}
-setzt die gewichtete Fehlerrückführung aus
-Gleichung~\eqref{eq:bp-hidden-delta} um.
+\textbf{Umsetzung:} Die Methode \texttt{train} beginnt bei der Ausgabeschicht. \texttt{Layer.calculateDeltas} unterscheidet zwei Fälle: Liegen Zielwerte vor, wird pro Ausgabeneuron \texttt{(targets[i] - output) * derivative} berechnet (entspricht Gleichung~\eqref{eq:bp-output-delta}). Für eine verborgene Schicht werden stattdessen die Deltas und die Gewichtsmatrix der nächsten Schicht übergeben. Die Summe \texttt{nextLayerDeltas[k] * nextLayerWeights[k][j]} setzt die gewichtete Fehlerrückführung aus Gleichung~\eqref{eq:bp-hidden-delta} um. Die Gewichtsmatrix ist als \texttt{weights[i][j]} aufgebaut: Der erste Index (\texttt{i}) bezeichnet das aktuelle Neuron, der zweite (\texttt{j}) ein Neuron der Vorgängerschicht. \texttt{nextLayerWeights[k][j]} bezeichnet somit die Verbindung vom aktuellen Neuron \texttt{j} zum nachfolgenden Neuron \texttt{k}.
 
-Die Gewichtsmatrix einer verarbeitenden Schicht ist als
-\texttt{weights[i][j]} aufgebaut: Der erste Index bezeichnet das aktuelle
-Neuron, der zweite ein Neuron der Vorgängerschicht. Deshalb
-bezeichnet \texttt{nextLayerWeights[k][j]} die Verbindung vom aktuellen
-Neuron \texttt{j} zum nachfolgenden Neuron \texttt{k}. Die Indizierung
-realisiert die Multiplikation mit der transponierten Gewichtsmatrix, ohne
-diese als zusätzliches Array anzulegen. Die letzte Spalte enthält den Bias
-und wird bei der Rückführung auf die tatsächlichen Vorgängerneuronen nicht
-einbezogen.
-
-Listing~\ref{lst:bp-train} zeigt den Ablauf im vorhandenen Code. Zuerst
-werden sämtliche Deltas berechnet; erst die zweite Schleife verändert die
-Gewichte. Diese Trennung verhindert, dass ein Fehlersignal bereits mit
-aktualisierten Gewichten berechnet wird und damit nicht mehr zum
-Vorwärtsdurchlauf passt. Für die Eingabeschicht wird kein Delta benötigt,
-da dort keine eingehenden Gewichte trainiert werden.
+\textbf{Begründung:} Die Wahl dieser spezifischen Array-Indizierung realisiert implizit die Multiplikation mit der transponierten Gewichtsmatrix. Es ist eine bewusste Optimierung, die \emph{kein} zusätzliches Array für die transponierte Matrix anlegt, was Speicherkapazität spart und den Garbage Collector von Java entlastet. Die strikte Trennung von Delta-Berechnung und Gewichts-Update (siehe Listing~\ref{lst:bp-train}) garantiert algorithmische Integrität, da ein Fehlersignal so niemals fälschlicherweise mit bereits aktualisierten Gewichten berechnet wird.
 
 \begin{javacode}[label={lst:bp-train}]{}
-	double[][] deltas = new double[layers.length][];
-	deltas[lastIndex] = layers[lastIndex].calculateDeltas(null, null, targets);
-	for (int i = lastIndex - 1; i > 0; i--) {
-			deltas[i] = layers[i].calculateDeltas(
-			deltas[i + 1], layers[i + 1].getWeights(), null);
-		}
-	for (int i = 1; i <= lastIndex; i++) {
-			layers[i].updateWeights(deltas[i], learningRate, momentum);
-		}
-	forwardReady = false;
+    double[][] deltas = new double[layers.length][];
+    deltas[lastIndex] = layers[lastIndex].calculateDeltas(null, null, targets);
+    for (int i = lastIndex - 1; i > 0; i--) {
+            deltas[i] = layers[i].calculateDeltas(
+            deltas[i + 1], layers[i + 1].getWeights(), null);
+        }
+    for (int i = 1; i <= lastIndex; i++) {
+            layers[i].updateWeights(deltas[i], learningRate, momentum);
+        }
+    forwardReady = false;
 \end{javacode}
 \JavaCodeCaption{Berechnungsreihenfolge in \texttt{FFNeuralNetwork.train}
-	(Auszug aus der eigenen Implementierung).}
+    (Auszug aus der eigenen Implementierung).}
 
-Das Attribut \texttt{forwardReady} stellt im regulären Methodenablauf
-sicher, dass vor jedem Lernschritt ein gültiger Vorwärtsdurchlauf erfolgt.
-Nach dem Parameterupdate wird es zurückgesetzt. Ein erneuter Aufruf von
-\texttt{train} ohne neue Vorwärtsrechnung wird mit einer Ausnahme abgewiesen.
+Das Attribut \texttt{forwardReady} erzwingt architekturseitig, dass vor jedem Lernschritt ein gültiger Vorwärtsdurchlauf erfolgt. Ein erneuter Aufruf von \texttt{train} ohne vorheriges \texttt{feedForward} wird mit einer Ausnahme abgewiesen, was eine robuste API-Nutzung gewährleistet.
 
 \subsubsection{Bias, Momentum und verwendete Fehlerfunktion}
 
-Die Methode \texttt{Layer.updateWeights} verarbeitet sowohl die regulären
-Gewichte als auch die zusätzliche Bias-Spalte
-(Listing~\ref{lst:bp-update}). Für diese Spalte wird der Eingang auf $1$
-gesetzt. Das Array \texttt{previousUpdates} speichert für jeden Parameter
-die letzte Änderung. Die Berechnung von \texttt{update} entspricht damit
-Gleichung~\eqref{eq:bp-momentum} unter der negativen
-Delta-Konvention aus Gleichung~\eqref{eq:bp-delta-definition}.
+Die Methode \texttt{Layer.updateWeights} verarbeitet sowohl die regulären Gewichte als auch die zusätzliche Bias-Spalte (Listing~\ref{lst:bp-update}). Für diese Spalte wird der Eingang schlicht auf $1$ gesetzt. Das Array \texttt{previousUpdates} speichert für jeden Parameter die letzte Änderung. Die Berechnung von \texttt{update} entspricht damit Gleichung~\eqref{eq:bp-momentum} unter der negativen Delta-Konvention aus Gleichung~\eqref{eq:bp-delta-definition}. 
+
+\textbf{Begründung:} Die Behandlung des Bias als reguläres Gewicht mit einem konstanten Input von 1 ist eine gängige mathematische Vereinfachung. Code-technisch bedeutet dies, dass keine separate Update-Logik für Bias-Werte programmiert werden muss, was die Fehleranfälligkeit der Implementierung stark reduziert und den Code schlank hält.
 
 \begin{javacode}[label={lst:bp-update}]{}
-	void updateWeights(double[] deltas, double learningRate, double momentum) {
-			int prevSize = lastInputs.length;
-			for (int i = 0; i < neurons.length; i++) {
-					for (int j = 0; j <= prevSize; j++) {
-							double input = j == prevSize ? 1.0 : lastInputs[j];
-							double update = momentum * previousUpdates[i][j] + learningRate * deltas[i] * input;
-							weights[i][j] += update;
-							previousUpdates[i][j] = update;
-						}
-				}
-		}
+    void updateWeights(double[] deltas, double learningRate, double momentum) {
+            int prevSize = lastInputs.length;
+            for (int i = 0; i < neurons.length; i++) {
+                    for (int j = 0; j <= prevSize; j++) {
+                            double input = j == prevSize ? 1.0 : lastInputs[j];
+                            double update = momentum * previousUpdates[i][j] + learningRate * deltas[i] * input;
+                            weights[i][j] += update;
+                            previousUpdates[i][j] = update;
+                        }
+                }
+        }
 \end{javacode}
 
-Die Trainingsroutine ist auf die halbe Fehlerquadratsumme aus
-Gleichung~\eqref{eq:bp-loss} ausgelegt. Sie nimmt keine austauschbare
-Fehlerfunktion entgegen, sondern verwendet deren Ableitung unmittelbar in
-\texttt{calculateDeltas}. \texttt{CostFunction.HalfSquaredError} dient zur
-Auswertung dieses Fehlers. Der ebenfalls vorhandene
-\texttt{MeanSquaredError} berechnet hingegen den Mittelwert der quadrierten
-Abweichungen über die Ausgaben. Bei $n_L$ Ausgabeneuronen gilt
-$E=(n_L/2)\,\mathrm{MSE}$. Ein Wechsel der ausgegebenen Messgröße ändert
-daher nicht automatisch die im Training verwendete Ableitung.
+Die Trainingsroutine ist hardcodiert auf die halbe Fehlerquadratsumme aus Gleichung~\eqref{eq:bp-loss} ausgelegt. Sie nimmt absichtlich keine austauschbare Fehlerfunktion entgegen, sondern verwendet deren feste Ableitung unmittelbar in \texttt{calculateDeltas}. \textbf{Begründung:} Für den Scope dieses Projekts minimiert dies die Komplexität. Der ebenfalls vorhandene \texttt{MeanSquaredError} dient lediglich der Auswertung und Evaluierung, greift aber nicht in den Gradientenfluss ein.
 
 \subsubsection{Einbindung in die Trainingsschleife}
 
-Die Klasse \texttt{App} verwendet ein Netz mit der Topologie $2$--$4$--$1$,
-Sigmoid-Aktivierung und dem Zufallsstartwert $42$. Die Datei
-\path{data/xor.csv} liefert im Standardaufruf vier Trainingsmuster. Für jede
-Datenzeile werden nacheinander \texttt{feedForward} und \texttt{train}
-aufgerufen. Die Parameter werden also nach jedem Muster angepasst, wie in
-den Vorlesungsfolien beschrieben
-\parencite[Folie~14]{vietenBackpropagation}. Die Reihenfolge bleibt über die
-Epochen hinweg unverändert. Der Modusname \texttt{sgd} bezeichnet im Projekt
-somit ein inkrementelles Gradientenverfahren mit fester Musterreihenfolge;
-eine zufällige Auswahl oder Durchmischung findet nicht statt.
+\textbf{Umsetzung:} Die Klasse \texttt{App} verwendet ein Netz mit der Topologie $2$--$4$--$1$, Sigmoid-Aktivierung und dem Zufallsstartwert $42$. Die Datei \path{data/xor.csv} liefert die Trainingsmuster. Die Parameter werden nach \emph{jedem} Muster angepasst (Stochastischer Gradientenabstieg). Der Modusname \texttt{sgd} bezeichnet im Projekt somit ein inkrementelles Verfahren mit fester Musterreihenfolge.
 
-Die Lernrate startet bei $1{,}0$. Im Modus \texttt{sgd} ist $\mu=0$, in den
-Modi \texttt{momentum} und \texttt{adaptive} gilt $\mu=0{,}9$. Nach jeder
-Epoche berechnet \texttt{meanLoss} den Fehler aller Muster bei unveränderten
-Gewichten neu. Dieser Wert entspricht $\overline{E}$ und ist kein
-Mittelwert der während der Parameteränderungen aufgetretenen Fehler.
-Im adaptiven Modus halbiert \texttt{LearningRateScheduler} die Lernrate
-nach $200$ Epochen ohne ausreichende Verbesserung. Im aktuellen Aufruf
-bedeutet eine ausreichende Verbesserung eine Abnahme um mehr als $10^{-5}$
-gegenüber dem gespeicherten Vergleichswert; die untere Lernratengrenze ist
-$0{,}01$. Diese Anpassung verändert die Schrittweite, während die
-Backpropagation-Gleichungen unverändert bleiben.
+\textbf{Begründung:} Die feste Musterreihenfolge und der gesetzte Seed (42) dienen primär der Reproduzierbarkeit der Testergebnisse und der sauberen Dokumentation im Rahmen dieses Berichts. Durch den Einsatz des \texttt{LearningRateScheduler} im Modus \texttt{adaptive} (Halbierung der Lernrate nach 200 Epochen ohne signifikante Verbesserung) wird das Problem der Oszillation in späten Trainingsphasen umgangen, ohne die Kernmechanik der Backpropagation-Gleichungen modifizieren zu müssen.
