@@ -6,10 +6,10 @@
 
 Um die Zielsetzung eines tiefgreifenden Verständnisses für neuronale Netze zu erfüllen, wurde die gesamte Architektur in nativem Java ohne externe Machine-Learning-Bibliotheken entwickelt. Die Logik gliedert sich primär in die Komponenten \texttt{FFNeuralNetwork}, \texttt{Layer} und \texttt{ActivationFunction}.
 
-\textbf{Beschreibung der Umsetzung:} 
-Das Netz (\texttt{FFNeuralNetwork}) verwaltet ein Array von \texttt{Layer}-Objekten. Anstatt jedes Neuron als eigenständiges Objekt zu modellieren, kapselt jede Schicht (\texttt{Layer}) die Eigenschaften all ihrer Neuronen in Arrays: Sie speichert die aktuelle Anzahl der Neuronen, die Aktivierungswerte sowie die zugehörigen eingehenden Gewichtsmatrizen (\texttt{weights}) und Bias-Werte (\texttt{biases}). Der Vorwärtsdurchlauf (\texttt{feedForward}) iteriert sequenziell über diese Schichten. Jede Schicht berechnet die gewichtete Summe der Eingaben der vorherigen Schicht, addiert den Bias und wendet über \texttt{ActivationFunction} die zugewiesene nicht-lineare Aktivierungsfunktion an. 
+\textbf{Beschreibung der Umsetzung:}
+Das Netz (\texttt{FFNeuralNetwork}) verwaltet ein Array von \texttt{Layer}-Objekten. Anstatt jedes Neuron als eigenständiges Objekt zu modellieren, kapselt jede Schicht (\texttt{Layer}) die Eigenschaften all ihrer Neuronen in Arrays: Sie speichert die aktuelle Anzahl der Neuronen, die Aktivierungswerte sowie die zugehörigen eingehenden Gewichtsmatrizen (\texttt{weights}) und Bias-Werte (\texttt{biases}). Der Vorwärtsdurchlauf (\texttt{feedForward}) iteriert sequenziell über diese Schichten. Jede Schicht berechnet die gewichtete Summe der Eingaben der vorherigen Schicht, addiert den Bias und wendet über \texttt{ActivationFunction} die zugewiesene nicht-lineare Aktivierungsfunktion an.
 
-\textbf{Begründung der Umsetzung:} 
+\textbf{Begründung der Umsetzung:}
 Die Entscheidung für eine objektorientierte Kapselung auf Schicht-Ebene anstelle einer Modellierung einzelner Neuronen-Objekte ist architektonisch begründet: Sie nähert den Code an die zugrundeliegenden mathematischen Vektor- und Matrixoperationen an und vermeidet einen massiven Objekt-Overhead im Speicher. Die iterative Array-Verarbeitung erhöht zudem die Cache-Lokalität und Laufzeiteffizienz. Die Auslagerung der Aktivierungsfunktionen in eine eigenständige Struktur dient der Modularität. So können verschiedene Aktivierungen (z.\,B. Sigmoid, ReLU) einfach zugewiesen und ausgetauscht werden, ohne die Kernlogik der Schichten anpassen zu müssen.
 
 \subsection{Umsetzung der Backpropagation in Java}
@@ -30,46 +30,48 @@ Die Backpropagation nutzt dieselben drei Kernklassen. \texttt{FFNeuralNetwork} s
 \textbf{Begründung:} Die Wahl dieser spezifischen Array-Indizierung realisiert implizit die Multiplikation mit der transponierten Gewichtsmatrix. Es ist eine bewusste Optimierung, die \emph{kein} zusätzliches Array für die transponierte Matrix anlegt, was Speicherkapazität spart und den Garbage Collector von Java entlastet. Die strikte Trennung von Delta-Berechnung und Gewichts-Update (siehe Listing~\ref{lst:bp-train}) garantiert algorithmische Integrität, da ein Fehlersignal so niemals fälschlicherweise mit bereits aktualisierten Gewichten berechnet wird.
 
 \begin{javacode}[label={lst:bp-train}]{}
-    double[][] deltas = new double[layers.length][];
-    deltas[lastIndex] = layers[lastIndex].calculateDeltas(null, null, targets);
-    for (int i = lastIndex - 1; i > 0; i--) {
-            deltas[i] = layers[i].calculateDeltas(
-            deltas[i + 1], layers[i + 1].getWeights(), null);
-        }
-    for (int i = 1; i <= lastIndex; i++) {
-            layers[i].updateWeights(deltas[i], learningRate, momentum);
-        }
-    forwardReady = false;
+	double[][] deltas = new double[layers.length][];
+	deltas[lastIndex] = layers[lastIndex].calculateDeltas(null, null, targets);
+	for (int i = lastIndex - 1; i > 0; i--) {
+			deltas[i] = layers[i].calculateDeltas(
+			deltas[i + 1], layers[i + 1].getWeights(), null);
+		}
+	for (int i = 1; i <= lastIndex; i++) {
+			layers[i].updateWeights(deltas[i], learningRate, momentum);
+		}
+	forwardReady = false;
 \end{javacode}
 \JavaCodeCaption{Berechnungsreihenfolge in \texttt{FFNeuralNetwork.train}
-    (Auszug aus der eigenen Implementierung).}
+	(Auszug aus der eigenen Implementierung).}
 
 Das Attribut \texttt{forwardReady} erzwingt architekturseitig, dass vor jedem Lernschritt ein gültiger Vorwärtsdurchlauf erfolgt. Ein erneuter Aufruf von \texttt{train} ohne vorheriges \texttt{feedForward} wird mit einer Ausnahme abgewiesen, was eine robuste API-Nutzung gewährleistet.
 
 \subsubsection{Bias, Momentum und verwendete Fehlerfunktion}
 
-Die Methode \texttt{Layer.updateWeights} verarbeitet sowohl die regulären Gewichte als auch die zusätzliche Bias-Spalte (Listing~\ref{lst:bp-update}). Für diese Spalte wird der Eingang schlicht auf $1$ gesetzt. Das Array \texttt{previousUpdates} speichert für jeden Parameter die letzte Änderung. Die Berechnung von \texttt{update} entspricht damit Gleichung~\eqref{eq:bp-momentum} unter der negativen Delta-Konvention aus Gleichung~\eqref{eq:bp-delta-definition}. 
+Die Methode \texttt{Layer.updateWeights} verarbeitet sowohl die regulären Gewichte als auch die zusätzliche Bias-Spalte (Listing~\ref{lst:bp-update}). Für diese Spalte wird der Eingang schlicht auf $1$ gesetzt. Das Array \texttt{previousUpdates} speichert für jeden Parameter die letzte Änderung. Die Berechnung von \texttt{update} entspricht damit Gleichung~\eqref{eq:bp-momentum} unter der negativen Delta-Konvention aus Gleichung~\eqref{eq:bp-delta-definition}.
 
 \textbf{Begründung:} Die Behandlung des Bias als reguläres Gewicht mit einem konstanten Input von 1 ist eine gängige mathematische Vereinfachung. Code-technisch bedeutet dies, dass keine separate Update-Logik für Bias-Werte programmiert werden muss, was die Fehleranfälligkeit der Implementierung stark reduziert und den Code schlank hält.
 
 \begin{javacode}[label={lst:bp-update}]{}
-    void updateWeights(double[] deltas, double learningRate, double momentum) {
-            int prevSize = lastInputs.length;
-            for (int i = 0; i < neurons.length; i++) {
-                    for (int j = 0; j <= prevSize; j++) {
-                            double input = j == prevSize ? 1.0 : lastInputs[j];
-                            double update = momentum * previousUpdates[i][j] + learningRate * deltas[i] * input;
-                            weights[i][j] += update;
-                            previousUpdates[i][j] = update;
-                        }
-                }
-        }
+	void updateWeights(double[] deltas, double learningRate, double momentum) {
+			int prevSize = lastInputs.length;
+			for (int i = 0; i < neurons.length; i++) {
+					for (int j = 0; j <= prevSize; j++) {
+							double input = j == prevSize ? 1.0 : lastInputs[j];
+							double update = momentum * previousUpdates[i][j] + learningRate * deltas[i] * input;
+							weights[i][j] += update;
+							previousUpdates[i][j] = update;
+						}
+				}
+		}
 \end{javacode}
 
 Die Trainingsroutine ist hardcodiert auf die halbe Fehlerquadratsumme aus Gleichung~\eqref{eq:bp-loss} ausgelegt. Sie nimmt absichtlich keine austauschbare Fehlerfunktion entgegen, sondern verwendet deren feste Ableitung unmittelbar in \texttt{calculateDeltas}. \textbf{Begründung:} Für den Scope dieses Projekts minimiert dies die Komplexität. Der ebenfalls vorhandene \texttt{MeanSquaredError} dient lediglich der Auswertung und Evaluierung, greift aber nicht in den Gradientenfluss ein.
 
 \subsubsection{Einbindung in die Trainingsschleife}
 
+
 \textbf{Umsetzung:} Die Klasse \texttt{App} verwendet ein Netz mit der Topologie $2$--$4$--$1$, Sigmoid-Aktivierung und dem Zufallsstartwert $42$. Die Datei \path{data/xor.csv} liefert die Trainingsmuster. Die Parameter werden nach \emph{jedem} Muster angepasst (Stochastischer Gradientenabstieg). Der Modusname \texttt{sgd} bezeichnet im Projekt somit ein inkrementelles Verfahren mit fester Musterreihenfolge.
+
 
 \textbf{Begründung:} Die feste Musterreihenfolge und der gesetzte Seed (42) dienen primär der Reproduzierbarkeit der Testergebnisse und der sauberen Dokumentation im Rahmen dieses Berichts. Durch den Einsatz des \texttt{LearningRateScheduler} im Modus \texttt{adaptive} (Halbierung der Lernrate nach 200 Epochen ohne signifikante Verbesserung) wird das Problem der Oszillation in späten Trainingsphasen umgangen, ohne die Kernmechanik der Backpropagation-Gleichungen modifizieren zu müssen.

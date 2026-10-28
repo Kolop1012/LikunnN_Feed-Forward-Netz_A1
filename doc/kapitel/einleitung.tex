@@ -2,32 +2,32 @@
 \label{sec:einleitung}
 
 \subsection{Aufgabenstellung}
-Im Rahmen der Lehrveranstaltung \emph{Lernen in natürlichen und künstlichen neuronalen Netzen} wurde die Aufgabe gestellt, ein einfaches Feed-Forward-Netz mit überwachter Lernstrategie eigenständig zu implementieren. Das Netz soll in der Lage sein, dreidimensionale Eingabemuster (drei kontinuierliche Merkmale) einer von drei vorgegebenen Klassen zuzuordnen. Die Umsetzung umfasst die vollständige Pipeline von der Datenaufbereitung über die Vorwärts- und Rückwärtspropagation bis hin zur Auswertung der Klassifikationsleistung. Der vollständige Quellcode sowie die Dokumentation sind im öffentlichen Repository unter \url{https://github.com/Kolop1012/LikunnN_Feed-Forward-Netz_A1} einsehbar.
+Im Rahmen des Projektseminars \emph{Lernen in natürlichen und künstlichen neuronalen Netzen} bestand die Aufgabe in der Projektphase 1 darin, ein einfaches Feed-Forward-Netz mit überwachter Lernstrategie in der Programmiersprache Java eigenständig zu implementieren \cite{vieten_sw01}. Der Fokus lag dabei auf der Erstellung eines lauffähigen Prototyps, der bewusst ohne externe Frameworks (wie TensorFlow oder PyTorch) auskommt, um die mathematischen und algorithmischen Grundlagen des überwachten Lernens transparent zu machen \cite{goodfellow2016}.
 
-Der vorliegende Bericht dokumentiert die tatsächlich implementierte und ausgewertete Teilaufgabe: das binäre XOR-Problem mit zwei Eingängen, einer Ausgabe und der Netzarchitektur 2--4--1. Die in der ursprünglichen Aufgabenbeschreibung geforderte Klassifikation dreidimensionaler Muster in drei Klassen wurde in dieser Umsetzung nicht realisiert. Methodik und Ergebnisse beziehen sich daher ausschließlich auf das XOR-Problem; eine Erfüllung der ursprünglichen Klassifikationsvorgabe wird nicht beansprucht.
+Ursprünglich war im Kickoff die Klassifikation dreidimensionaler Eingabemuster in drei Klassen vorgesehen. Der vorliegende Bericht dokumentiert jedoch die tatsächlich realisierte Umsetzung: Statt der 3-Klassen-Klassifikation wurde das binäre XOR-Problem mit zwei Eingängen und der Netzarchitektur \(2\text{--}4\text{--}1\) implementiert. Diese Entscheidung wurde bewusst getroffen, da das XOR-Problem ein klassisches Beispiel für die Notwendigkeit verdeckter Schichten darstellt und die Grenzen einfacher Perzeptrone aufzeigt \cite{minsky1969perceptrons}. Die vollständige Pipeline von der Datenaufbereitung über Vorwärts- und Rückwärtspropagation bis zur Auswertung der Klassifikationsleistung wurde dabei realisiert. Der Quellcode sowie diese Dokumentation sind im öffentlichen Repository unter \url{https://github.com/Kolop1012/LikunnN_Feed-Forward-Netz_A1} einsehbar \cite{github_repo}.
 
 \subsection{Zielsetzung}
-Ziel des Projekts ist es, ein funktionsfähiges, aber bewusst schlank gehaltenes neuronales Netz zu entwickeln, das den gesamten Lernzyklus (Init, Forward-Pass, Fehlerberechnung, Backpropagation, Gewichts-Update) selbst implementiert ohne auf Frameworks zurückzugreifen. Dadurch soll ein vertieftes Verständnis der zugrundeliegenden mathematischen Zusammenhänge erreicht werden.
+Ziel des Projekts ist die Entwicklung eines funktionsfähigen, bewusst schlank gehaltenen neuronalen Netzes, das den gesamten Lernzyklus (Initialisierung, Forward-Pass, Fehlerberechnung, Backpropagation, Gewichts-Update) selbst implementiert \cite{vieten_sw03}. Durch den Verzicht auf Frameworks soll ein vertieftes Verständnis der zugrundeliegenden mathematischen Zusammenhänge, insbesondere des Gradientenabstiegsverfahrens und der Delta-Regel, erreicht werden \cite{rumelhart1986}. Ein weiteres Ziel ist es, das Netz so zu optimieren, dass es das XOR-Problem fehlerfrei erlernt und eine hohe Generalisierungsfähigkeit aufweist. Dazu wird der Datensatz in Trainings-, Validierungs- und Testdaten aufgeteilt, um die Lernqualität objektiv bewerten zu können \cite{nielsen2015}.
 
 \subsection{Aufgabenkontext}
-Das Projekt entstand im Rahmen des Moduls \emph{Lernen in natürlichen und künstlichen neuronalen Netzen} im Studiengang \emph{Informatik}. Es wurde als Gruppenarbeit über einen Zeitraum von vier Wochen bearbeitet. Die Abgabe umfasst sowohl den lauffähigen Code als auch diesen Projektbericht. Die Bewertung orientiert sich an der im SW02 veröffentlichten Bewertungsmatrix (formale Vorgaben, wissenschaftlicher Schreibstil, Nachvollziehbarkeit der Umsetzung, Diskussion der Vor- und Nachteile).
+Das Projekt entstand im Modul \emph{Lernen in natürlichen und künstlichen neuronalen Netzen} im Studiengang \emph{Informatik}. Es wurde als Gruppenarbeit (3 bis 4 Personen) über einen Zeitraum von vier Wochen bearbeitet. Die Projektorganisation erfolgte in Anlehnung an Scrum bzw. Eduscrum, wobei ein Kanban-Board zur Aufgabenverwaltung und wöchentliche Stand-Up-Meetings zur Statusabfrage genutzt wurden. Die Abgabe umfasst den lauffähigen Java-Code sowie diesen Projektbericht. Die Bewertung orientiert sich an der veröffentlichten Bewertungsmatrix, die sowohl formale Vorgaben als auch die Nachvollziehbarkeit der Umsetzung und die Diskussion der Vor- und Nachteile umfasst \cite{vieten_sw02}.
 
 \subsection{Externe Vorgaben}
-Folgende Vorgaben wurden von Seiten der Lehrveranstaltung gemacht und im Projekt berücksichtigt:
+Folgende externe Vorgaben der Lehrveranstaltung wurden im Projekt zwingend berücksichtigt \cite{vieten_sw02}:
 \begin{itemize}
-	\item Implementierung eines \emph{Feed-Forward-Netzes} mit mindestens einer versteckten Schicht.
+	\item Implementierung eines \emph{Feed-Forward-Netzes} mit mindestens einer versteckten Schicht in Java.
 	\item Überwachtes Lernen mittels \emph{Backpropagation}.
-	\item Klassifikation von drei vorgegebenen Klassen.
-	\item Seitenumfang des Berichts: 10 Seiten (\(\pm\) 1).
-	\item Schrift: Times (12\,pt) oder Arial (11\,pt), Zeilenabstand 1,5, Rand 2,5\,cm, Blocksatz mit Silbentrennung.
-	\item Verpflichtende Literaturrecherche und Angabe aller Quellen.
+	\item Seitenumfang des Berichts: 10 Seiten (\(\pm\) 1), was ca. 4.000 bis 4.500 Wörtern entspricht.
+	\item Formale Layout-Vorgaben: Schrift Times (12\,pt) oder Arial (11\,pt), Zeilenabstand 1,5, Randbreite 2,5\,cm, Blocksatz mit Silbentrennung.
+	\item Verpflichtende Literaturrecherche und lückenlose Angabe aller Quellen im Literaturverzeichnis.
 \end{itemize}
 
 \subsection{Ermessensentscheidungen}
-Über die externen Vorgaben hinausgehend wurden folgende Entscheidungen eigenständig im Projektteam getroffen:
+Über die externen Vorgaben hinausgehend wurden folgende Entscheidungen eigenständig im Projektteam getroffen, um die Lernfähigkeit und Stabilität des Netzes zu verbessern:
 \begin{itemize}
-	\item Verwendung der \emph{halben Fehlerquadratsumme} als Fehlerfunktion (statt Kreuzentropie), da sie mathematisch einfacher herzuleiten ist und für die kleine Netzarchitektur ausreichend konvergiert.
-	\item Wahl der \emph{logistischen Sigmoidfunktion} als Aktivierungsfunktion in allen Schichten (statt ReLU), weil sie differenzierbar ist und die Ausgaben natürlicherweise auf $(0,1)$ beschränkt bleiben.
-	\item Feste Lernrate von \(\eta = 0{,}1\) mit manuell gewählter Epochengrenze (kein Early Stopping), um den Lernverlauf im Bericht transparent dokumentieren zu können.
-	\item Verwendung aller vier XOR-Muster als Trainings- und Bewertungsdaten. Ein separater Testdatensatz wurde nicht eingesetzt; die Ergebnisse erlauben daher keine Aussage zur Generalisierung auf unbekannte Daten.
+	\item \textbf{Datensatz und Topologie:} Statt der ursprünglich angedachten 3-Klassen-Klassifikation wurde das binäre XOR-Problem mit der Netzarchitektur \(2\text{--}4\text{--}1\) gewählt. Es erfordert zwingend eine verdeckte Schicht und eignet sich daher ideal zur Demonstration der Backpropagation \cite{minsky1969perceptrons}.
+	\item \textbf{Aktivierungsfunktion:} Abweichend von der in der Kurzeinführung vorgestellten Identitätsfunktion wurde die logistische Funktion (Sigmoid) implementiert. Diese ist stetig differenzierbar, was eine effiziente Berechnung der Ableitung während der Backpropagation ermöglicht, und beschränkt die Ausgabe auf das Intervall \([0,1]\) \cite{vieten_sw01, bishop2006}.
+	\item \textbf{Bias-Neuron:} Zur Verbesserung der Lernfähigkeit wurde das Netz um ein Bias-Neuron (mit konstantem Eingangssignal 1) erweitert. Dies ermöglicht eine Verschiebung der Hyperebene unabhängig vom Ursprung („lernbarer y-Achsenabschnitt“) \cite{vieten_sw02}.
+	\item \textbf{Optimierungsverfahren:} Die klassische Gewichtsanpassung wurde durch den Einsatz eines \emph{Momentum-Terms} zur Beschleunigung der Konvergenz sowie einer \emph{adaptiven Lernratensteuerung} erweitert, um Oszillationen während des Trainings zu minimieren \cite{aggarwal2023}.
+	\item \textbf{Fehlerfunktion:} Als Fehlerfunktion wurde die halbe Fehlerquadratsumme gewählt. Durch den Faktor \(\frac{1}{2}\) wird der störende Faktor 2 beim Ableiten eliminiert, was die Implementierung des Backward-Pass vereinfacht \cite{vieten_sw03, rumelhart1986}.
 \end{itemize}
