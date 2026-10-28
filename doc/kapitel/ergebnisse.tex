@@ -69,4 +69,52 @@ Wie die Messungen belegen, reduzierte sich der mittlere Fehler $\overline{E}$ vo
     \label{fig:loss_history}
 \end{figure}
 
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        neuron/.style={circle, draw, minimum size=1.1cm, thick, fill=white, font=\small},
+        bias/.style={circle, draw, minimum size=0.8cm, thick, fill=gray!20, font=\small},
+        arrow/.style={->, >=stealth, thick, color=black!70}
+    ]
+    
+    % Input Layer
+    \node[neuron] (I1) at (0, 1.5) {$x_1$};
+    \node[neuron] (I2) at (0, -1.5) {$x_2$};
+    \node[bias] (B1) at (0, 3.5) {$1$};
+    
+    % Hidden Layer
+    \node[neuron] (H1) at (4, 3) {$h_1$};
+    \node[neuron] (H2) at (4, 1) {$h_2$};
+    \node[neuron] (H3) at (4, -1) {$h_3$};
+    \node[neuron] (H4) at (4, -3) {$h_4$};
+    \node[bias] (B2) at (4, 5) {$1$};
+    
+    % Output Layer
+    \node[neuron] (O1) at (8, 0) {$y$};
+    
+    % Verbindungen Input -> Hidden
+    \foreach \i in {1,2}
+        \foreach \h in {1,2,3,4}
+            \draw[arrow] (I\i) -- (H\h);
+            
+    % Bias1 -> Hidden (mit Werten aus der letzten Spalte von Layer 1)
+    \draw[arrow, dashed] (B1) -- node[above, sloped, font=\tiny] {-0.911} (H1);
+    \draw[arrow, dashed] (B1) -- node[above, sloped, font=\tiny] {6.664} (H2);
+    \draw[arrow, dashed] (B1) -- node[below, sloped, font=\tiny] {3.174} (H3);
+    \draw[arrow, dashed] (B1) -- node[below, sloped, font=\tiny] {2.897} (H4);
+
+    % Verbindungen Hidden -> Output (mit Werten aus Layer 2)
+    \draw[arrow] (H1) -- node[above, sloped, font=\tiny] {2.193} (O1);
+    \draw[arrow] (H2) -- node[above, sloped, font=\tiny] {8.418} (O1);
+    \draw[arrow] (H3) -- node[below, sloped, font=\tiny] {3.569} (O1);
+    \draw[arrow] (H4) -- node[below, sloped, font=\tiny] {-11.720} (O1);
+        
+    % Bias2 -> Output
+    \draw[arrow, dashed] (B2) -- node[above, sloped, font=\tiny] {-5.918} (O1);
+
+    \end{tikzpicture}
+    \caption{Visualisierung der 2--4--1 Netzarchitektur mit den gelernten Bias- und Verbindungsgewichten nach $10\,000$ Epochen.}
+    \label{fig:netz_architektur_gewichte}
+\end{figure}
+
 \newpage
