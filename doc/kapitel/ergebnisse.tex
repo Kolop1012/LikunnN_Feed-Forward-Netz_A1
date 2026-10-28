@@ -10,16 +10,16 @@ Dazu wird jeder Parameter $\theta$, einschließlich der Bias-Werte, einzeln
 um $\varepsilon=10^{-6}$ erhöht beziehungsweise verringert. Die zentrale
 Differenz
 \begin{equation}
-    g_{\mathrm{num}}(\theta)
-      = \frac{E(\theta+\varepsilon)-E(\theta-\varepsilon)}
-             {2\varepsilon}
-    \label{eq:bp-gradient-check}
+	g_{\mathrm{num}}(\theta)
+	= \frac{E(\theta+\varepsilon)-E(\theta-\varepsilon)}
+	{2\varepsilon}
+	\label{eq:bp-gradient-check}
 \end{equation}
 nähert die Ableitung an, während alle anderen Parameter unverändert
 bleiben. Der Test führt anschließend einen Lernschritt ohne Momentum mit
 $\eta=0{,}05$ durch und rekonstruiert den implementierten Gradienten als
 $g_{\mathrm{impl}}=(\theta_{\mathrm{vorher}}-
-\theta_{\mathrm{nachher}})/\eta$. Beide Werte müssen bis auf eine absolute
+	\theta_{\mathrm{nachher}})/\eta$. Beide Werte müssen bis auf eine absolute
 Toleranz von $10^{-7}$ übereinstimmen. Damit wird die tatsächliche
 Parameteränderung gegen eine unabhängig aus Fehlerauswertungen berechnete
 Näherung geprüft.
@@ -46,93 +46,105 @@ stellen keinen allgemeinen Konvergenznachweis dar.
 
 Um die Performance und Konvergenz der Backpropagation-Implementierung zu bewerten, wurde ein Training des XOR-Problems über $10\,000$ Epochen im reinen SGD-Modus (ohne Momentum, $\eta = 1{,}0$) durchgeführt. Das Netz mit der Topologie 2--4--1 und dem festen Initialisierungs-Seed 42 zeigte dabei ein stabiles Lernverhalten.
 
-Wie die Messungen belegen, reduzierte sich der mittlere Fehler $\overline{E}$ von initial $0{,}1398$ kontinuierlich auf $0{,}000063$ nach $10\,000$ Epochen. Die Laufzeit für diesen gesamten Trainingsprozess (inklusive Vorwärts- und Rückwärtsrechnung für alle vier Muster pro Epoche) betrug auf dem Testsystem lediglich $43\,\mathrm{ms}$. Diese geringe Ausführungszeit bestätigt die theoretische Vorüberlegung aus Abschnitt~\ref{sec:diskussion}, dass die Komplexität pro Muster linear zur Anzahl der Parameter $\mathcal{O}(P)$ wächst und die Implementierung in nativem Java (ohne Overhead durch externe Frameworks) für kleine Netztopologien äußerst effizient arbeitet.
+Wie die Messungen belegen, reduzierte sich der mittlere Fehler $\overline{E}$ von initial $0{,}1398$ kontinuierlich auf $0{,}000063$ nach $10\,000$ Epochen. Die Laufzeit für diesen gesamten Trainingsprozess (inklusive Vorwärts- und Rückwärtsrechnung für alle vier Muster pro Epoche) betrug auf dem Testsystem im Median $39{,}09\,\mathrm{ms}$. Diese geringe Ausführungszeit bestätigt die theoretische Vorüberlegung, dass die Komplexität pro Muster linear zur Anzahl der Parameter $\mathcal{O}(P)$ wächst und die Implementierung in nativem Java (ohne Overhead durch externe Frameworks) für kleine Netztopologien äußerst effizient arbeitet.
+
+\subsubsection{Vergleich der Trainingsmodi}
+Neben dem reinen SGD-Training wurden die Varianten mit Momentum ($\alpha=0{,}9$) und mit adaptiver Lernratensteuerung (Start $\eta=1{,}0$) unter identischen Bedingungen (Topologie 2--4--1, Seed 42, 10\,000 Epochen) evaluiert. Tabelle~\ref{tab:modi-vergleich} fasst die Ergebnisse zusammen.
+
+\begin{table}[htbp]
+	\centering
+	\begin{tabular}{lccc}
+		\toprule
+		\textbf{Modus}            & \textbf{Endfehler $\overline{E}$} & \textbf{Epochen bis $\overline{E}<0{,}01$} & \textbf{Laufzeit (Median)} \\
+		\midrule
+		SGD (ohne Momentum)       & 0{,}000063                        & 677                                        & 39{,}09\,ms                \\
+		Momentum ($\alpha=0{,}9$) & 0{,}000004                        & 65                                         & 40{,}45\,ms                \\
+		Adaptive Lernrate         & 0{,}000029                        & 65                                         & 37{,}28\,ms                \\
+		\bottomrule
+	\end{tabular}
+	\caption{Vergleich der drei Trainingsmodi auf dem XOR-Problem
+		(Topologie 2--4--1, Seed 42, 10\,000 Epochen, Laufzeit als Median aus fünf Läufen).}
+	\label{tab:modi-vergleich}
+\end{table}
+
+Die Ergebnisse zeigen, dass der Momentum-Term die Konvergenz deutlich beschleunigt: Die Schwelle $\overline{E}<0{,}01$ wird bereits nach 65 statt 677 Epochen erreicht, und der Endfehler fällt auf $0{,}000004$. Dies bestätigt die theoretische Erwartung, dass der Momentum-Term Oszillationen glättet und die Konvergenz in flachen Bereichen der Fehlerfläche beschleunigt \parencite{aggarwal2023}.
+
+Die adaptive Lernratensteuerung erreicht die Fehlerschwelle ebenfalls nach 65 Epochen, erzielt aber mit $0{,}000029$ einen etwas höheren Endfehler als die Momentum-Variante. Dies ist darauf zurückzuführen, dass der Scheduler die Lernrate bei einem Plateau bis auf die Untergrenze von $0{,}01$ reduziert hat, wodurch die letzten Gewichtsanpassungen entsprechend kleiner ausfielen.
+
+Interessanterweise unterscheiden sich die Laufzeiten der drei Modi kaum (ca.\ 37 bis 40\,ms). Da der Rechenaufwand pro Epoche in allen Modi identisch ist (der Momentum-Term und der Scheduler verursachen nur $\mathcal{O}(P)$-Zusatzaufwand), hängt die Gesamtlaufzeit primär von der Anzahl der Epochen ab. Die Unterschiede zwischen den gemessenen Medianen liegen im Bereich der natürlichen JVM-Schwankungen; durch den festen Seed~42 sind Endfehler und Konvergenzgeschwindigkeit dagegen deterministisch, lediglich die Laufzeit schwankt zwischen den Läufen.
 
 \begin{figure}[htbp]
-    \centering
-    \begin{tikzpicture}
-        \begin{axis}[
-            width=0.8\textwidth,
-            height=6cm,
-            xlabel={Epoche},
-            ylabel={Mittlerer Fehler $E$},
-            ymode=log, % Logarithmische Y-Achse zeigt Konvergenz besser
-            grid=major,
-            legend pos=north east
-        ]
-        % Der Pfad zur CSV muss stimmen. Spaltennamen anpassen falls nötig (Epoch, Loss)
-        \addplot[color=blue, thick] table [x=Epoch, y=Loss, col sep=comma] {kapitel/data/loss_history.csv};
-        \addlegendentry{SGD (Lernrate 1.0)}
-        \end{axis}
-    \end{tikzpicture}
-    \caption{Lernverlauf (Loss History) für das XOR-Problem über 10.000 Epochen im SGD-Modus. Dargestellt ist die halbe Fehlerquadratsumme.}
-    \label{fig:loss_history}
+	\centering
+	\begin{tikzpicture}
+		\begin{axis}[
+				width=0.8\textwidth,
+				height=6cm,
+				xlabel={Epoche},
+				ylabel={Mittlerer Fehler $E$},
+				ymode=log,
+				grid=major,
+				legend pos=north east
+			]
+			\addplot[color=blue, thick] table [x=Epoch, y=Loss, col sep=comma] {kapitel/data/loss_history.csv};
+			\addlegendentry{SGD (Lernrate 1.0)}
+		\end{axis}
+	\end{tikzpicture}
+	\caption{Lernverlauf (Loss History) für das XOR-Problem über 10\,000 Epochen im SGD-Modus. Dargestellt ist die halbe Fehlerquadratsumme.}
+	\label{fig:loss_history}
 \end{figure}
 
 \begin{figure}[htbp]
-    \centering
-    % 1. Visualisierung des Netzwerks
-    \begin{tikzpicture}[
-        neuron/.style={circle, draw, minimum size=1.1cm, thick, font=\small},
-        arrow/.style={->, >=stealth, color=black!80}
-    ]
-    
-    % Input Layer (Kein Bias, neutral weiß)
-    \node[neuron, fill=white] (I1) at (0, 1.2) {$x_1$};
-    \node[neuron, fill=white] (I2) at (0, -1.2) {$x_2$};
-    
-    % Hidden Layer (Graustufen entsprechend Bias: dunkel = negativ, weiß = positiv)
-    % Bias h1 = -0.911 -> black!40
-    % Bias h2 = +6.664 -> black!0 (weiß)
-    % Bias h3 = +3.174 -> black!20
-    % Bias h4 = +2.897 -> black!22
-    \node[neuron, fill=black!40] (H1) at (4, 2.25) {};
-    \node[neuron, fill=black!0]  (H2) at (4, 0.75) {};
-    \node[neuron, fill=black!20] (H3) at (4, -0.75) {};
-    \node[neuron, fill=black!22] (H4) at (4, -2.25) {};
-    
-    % Output Layer
-    % Bias y = -5.918 -> sehr dunkel (black!80), Schriftfarbe weiß (Gegenteil)
-    \node[neuron, fill=black!80, text=white] (O1) at (8, 0) {$y$};
-    
-    % Input x1 -> Hidden (Liniendicke skaliert mit |w|)
-    \draw[arrow, line width=0.6pt] (I1) -- (H1);
-    \draw[arrow, line width=1.5pt] (I1) -- (H2);
-    \draw[arrow, line width=1.0pt] (I1) -- (H3);
-    \draw[arrow, line width=2.0pt] (I1) -- (H4);
+	\centering
+	\begin{tikzpicture}[
+			neuron/.style={circle, draw, minimum size=1.1cm, thick, font=\small},
+			arrow/.style={->, >=stealth, color=black!80}
+		]
 
-    % Input x2 -> Hidden
-    \draw[arrow, line width=1.0pt] (I2) -- (H1);
-    \draw[arrow, line width=1.4pt] (I2) -- (H2);
-    \draw[arrow, line width=0.7pt] (I2) -- (H3);
-    \draw[arrow, line width=2.0pt] (I2) -- (H4);
+		\node[neuron, fill=white] (I1) at (0, 1.2) {$x_1$};
+		\node[neuron, fill=white] (I2) at (0, -1.2) {$x_2$};
 
-    % Hidden -> Output
-    \draw[arrow, line width=0.8pt] (H1) -- (O1);
-    \draw[arrow, line width=2.4pt] (H2) -- (O1);
-    \draw[arrow, line width=1.2pt] (H3) -- (O1);
-    \draw[arrow, line width=3.2pt] (H4) -- (O1);
+		\node[neuron, fill=black!40] (H1) at (4, 2.25) {};
+		\node[neuron, fill=black!0]  (H2) at (4, 0.75) {};
+		\node[neuron, fill=black!20] (H3) at (4, -0.75) {};
+		\node[neuron, fill=black!22] (H4) at (4, -2.25) {};
 
-    \end{tikzpicture}
+		\node[neuron, fill=black!80, text=white] (O1) at (8, 0) {$y$};
 
-    \vspace{0.6cm}
+		\draw[arrow, line width=0.6pt] (I1) -- (H1);
+		\draw[arrow, line width=1.5pt] (I1) -- (H2);
+		\draw[arrow, line width=1.0pt] (I1) -- (H3);
+		\draw[arrow, line width=2.0pt] (I1) -- (H4);
 
-    % 2. Tabelle aller Gewichte und Biase
-    \small
-    \begin{tabular}{l c c c c c c c}
-        \toprule
-        \textbf{Schicht / Neuron} & \textbf{Gewicht $x_1$} & \textbf{Gewicht $x_2$} & \textbf{Gewicht $h_1$} & \textbf{Gewicht $h_2$} & \textbf{Gewicht $h_3$} & \textbf{Gewicht $h_4$} & \textbf{Bias $b$} \\
-        \midrule
-        Hidden Neuron 1 & $1{,}221$ & $-2{,}864$ & -- & -- & -- & -- & $-0{,}911$ \\
-        Hidden Neuron 2 & $-4{,}624$ & $-4{,}370$ & -- & -- & -- & -- & $6{,}664$ \\
-        Hidden Neuron 3 & $-2{,}850$ & $-1{,}736$ & -- & -- & -- & -- & $3{,}174$ \\
-        Hidden Neuron 4 & $-6{,}830$ & $-6{,}926$ & -- & -- & -- & -- & $2{,}897$ \\
-        \midrule
-        Output Neuron $y$ & -- & -- & $2{,}193$ & $8{,}418$ & $3{,}569$ & $-11{,}720$ & $-5{,}918$ \\
-        \bottomrule
-    \end{tabular}
+		\draw[arrow, line width=1.0pt] (I2) -- (H1);
+		\draw[arrow, line width=1.4pt] (I2) -- (H2);
+		\draw[arrow, line width=0.7pt] (I2) -- (H3);
+		\draw[arrow, line width=2.0pt] (I2) -- (H4);
 
-    \caption{Visualisierung der 2--4--1 Netzarchitektur sowie Übersicht der gelernten Parameter. Die Liniendicke entspricht dem Betrag der Verbindungsgewichte. Die Graustufe der Neuronen repräsentiert deren Bias-Wert (dunkel = stark negativ, weiß = stark positiv).}
-    \label{fig:netz_architektur_gewichte}
+		\draw[arrow, line width=0.8pt] (H1) -- (O1);
+		\draw[arrow, line width=2.4pt] (H2) -- (O1);
+		\draw[arrow, line width=1.2pt] (H3) -- (O1);
+		\draw[arrow, line width=3.2pt] (H4) -- (O1);
+
+	\end{tikzpicture}
+
+	\vspace{0.6cm}
+
+	\small
+	\begin{tabular}{l c c c c c c c}
+		\toprule
+		\textbf{Schicht / Neuron} & \textbf{Gewicht $x_1$} & \textbf{Gewicht $x_2$} & \textbf{Gewicht $h_1$} & \textbf{Gewicht $h_2$} & \textbf{Gewicht $h_3$} & \textbf{Gewicht $h_4$} & \textbf{Bias $b$} \\
+		\midrule
+		Hidden Neuron 1           & $1{,}221$              & $-2{,}864$             & --                     & --                     & --                     & --                     & $-0{,}911$        \\
+		Hidden Neuron 2           & $-4{,}624$             & $-4{,}370$             & --                     & --                     & --                     & --                     & $6{,}664$         \\
+		Hidden Neuron 3           & $-2{,}850$             & $-1{,}736$             & --                     & --                     & --                     & --                     & $3{,}174$         \\
+		Hidden Neuron 4           & $-6{,}830$             & $-6{,}926$             & --                     & --                     & --                     & --                     & $2{,}897$         \\
+		\midrule
+		Output Neuron $y$         & --                     & --                     & $2{,}193$              & $8{,}418$              & $3{,}569$              & $-11{,}720$            & $-5{,}918$        \\
+		\bottomrule
+	\end{tabular}
+
+	\caption{Visualisierung der 2--4--1 Netzarchitektur sowie Übersicht der gelernten Parameter. Die Liniendicke entspricht dem Betrag der Verbindungsgewichte. Die Graustufe der Neuronen repräsentiert deren Bias-Wert (dunkel = stark negativ, weiß = stark positiv).}
+	\label{fig:netz_architektur_gewichte}
 \end{figure}
+
 \newpage

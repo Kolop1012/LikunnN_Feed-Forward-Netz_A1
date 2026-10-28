@@ -25,6 +25,7 @@
 *.dvi
 *.ps
 *.listing
+.latexmkrc
 
 # Glossare und Abkürzungen
 *.acn

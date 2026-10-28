@@ -42,7 +42,11 @@ public class App {
         System.out.printf("Datei: %s | Muster: %d | Netz: 2-4-1 | Seed: 42%n", file, data.length);
         System.out.printf("Modus: %s | Momentum: %.1f | Epochen: %d%n", mode, momentum, epochs);
         System.out.printf(Locale.ROOT, "Mittlerer Fehler E vor Training: %.6f%n", meanLoss(net, data));
-
+        
+        long startTime = System.nanoTime();
+        boolean reachedThreshold = false;
+        long epochAtThreshold = -1;
+        
         for (int epoch = 1; epoch <= epochs; epoch++) {
             // Online-Lernen: ein Update pro Datenzeile, feste Reihenfolge für die Demo.
             for (double[] row : data) {
@@ -53,6 +57,10 @@ public class App {
             double loss = meanLoss(net, data);
             if (!Double.isFinite(loss)) {
                 throw new IllegalArgumentException("Training instabil. Eingaben auf einen kleinen Wertebereich skalieren.");
+            }
+            if (!reachedThreshold && loss < 0.01) {
+                reachedThreshold = true;
+                epochAtThreshold = epoch;
             }
             if (epoch == 1 || epoch % 1000 == 0 || epoch == epochs) {
                 System.out.printf(Locale.ROOT, "Epoche %5d | Fehler E %.6f | Lernrate %.5f%n", epoch, loss, learningRate);
@@ -65,7 +73,10 @@ public class App {
                 learningRate = nextRate;
             }
         }
-
+        long endTime = System.nanoTime();
+        System.out.printf(Locale.ROOT, "\nLaufzeit: %.2f ms%n",
+                (endTime - startTime) / 1_000_000.0);
+        System.out.printf("Schwelle E<0,01 erreicht bei Epoche: %d%n", epochAtThreshold);
         System.out.println("\nx1, x2 -> Ausgabe | Klasse | Ziel");
         int correct = 0;
         for (double[] row : data) {

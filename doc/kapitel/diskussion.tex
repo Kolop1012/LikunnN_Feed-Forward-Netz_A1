@@ -1,33 +1,22 @@
 \section{Diskussion}
 \label{sec:diskussion}
 
-\subsection{Einordnung der Backpropagation-Implementierung}
+\subsection{Vorteile der Umsetzung}
+Die Aufteilung in Vorwärtsrechnung, Delta-Berechnung und Parameterupdate macht die Umsetzung mit den Formeln aus Abschnitt~\ref{sec:backpropagation} vergleichbar. Insbesondere die getrennten Schleifen für Deltas und Gewichtsänderungen stellen einen einheitlichen Parameterstand innerhalb eines Lernschritts sicher.
+Ein weiterer Vorteil ist die effiziente Laufzeit: Bei einer Gesamtzahl von $P$ Gewichten einschließlich der Bias-Werte benötigen Vorwärtsrechnung, Rückwärtsrechnung und Update jeweils $\mathcal{O}(P)$ Rechenoperationen pro Muster. Die gemessene Laufzeit von $43\,\mathrm{ms}$ für $10\,000$ Epochen bestätigt diese theoretische Abschätzung. Die Gradientenprüfungen aus Abschnitt~\ref{sec:backpropagation-pruefung} stützen zudem die Korrektheit der getesteten Lernschritte. Durch den Verzicht auf externe Frameworks bleibt der Code transparent und die mathematischen Zusammenhänge sind direkt nachvollziehbar.
 
-Die Aufteilung in Vorwärtsrechnung, Delta-Berechnung und Parameterupdate
-macht die Umsetzung mit den Formeln aus
-Abschnitt~\ref{sec:backpropagation} vergleichbar. Insbesondere die getrennten
-Schleifen für Deltas und Gewichtsänderungen stellen einen einheitlichen
-Parameterstand innerhalb eines Lernschritts sicher. Bei einer Gesamtzahl
-von $P$ Gewichten einschließlich der Bias-Werte benötigen Vorwärtsrechnung,
-Rückwärtsrechnung und Update jeweils $\mathcal{O}(P)$ Rechenoperationen pro
-Muster: Jede Verbindung wird pro Durchlauf nur eine konstante Anzahl von
-Malen verarbeitet. Diese Abschätzung folgt aus den Schleifen im Quellcode;
-eine Laufzeitmessung ist damit nicht verbunden.
+\subsection{Nachteile der Umsetzung}
+Eine wesentliche Einschränkung besteht darin, dass die Demo dieselben vier Muster zum Trainieren und zur abschließenden Bewertung verwendet. Daher lässt sich aus den Ergebnissen keine allgemeine Aussage über die Generalisierung auf unbekannte Daten ableiten. Für eine solche Bewertung müssten Trainings-, Validierungs- und Testdaten getrennt werden \parencite[Folie~15]{vieten_sw03}.
+Eine weitere Grenze ist die feste Kopplung des Trainings an die halbe Fehlerquadratsumme. Eine austauschbare Fehlerfunktion müsste zusätzlich ihre passende Ableitung bereitstellen, was die Austauschbarkeit der Kostenfunktion derzeit einschränkt. Auch ein systematischer Vergleich der drei Trainingsvarianten über mehrere Initialisierungen hinweg steht noch aus; das Bestehen derselben XOR-Tests allein zeigt noch nicht, welche Variante schneller oder zuverlässiger lernt.
 
-Die Gradientenprüfungen aus Abschnitt~\ref{sec:backpropagation-pruefung}
-stützen die Korrektheit der getesteten Lernschritte. Die XOR-Tests erfassen
-darüber hinaus das Zusammenspiel über viele Epochen. Da die Demo jedoch
-dieselben vier Muster zum Trainieren und zur abschließenden Bewertung
-verwendet, lässt sich daraus keine allgemeine Aussage über die
-Generalisierung auf unbekannte Daten ableiten. Für eine solche Bewertung
-müssten Trainings-, Validierungs- und Testdaten getrennt werden
-\parencite[Folie~15]{vieten_sw03}.
+\subsection{Erweiterungen}
+Aufbauend auf den genannten Nachteilen ergeben sich mehrere Ansätze für zukünftige Erweiterungen:
+\begin{itemize}
+	\item \textbf{Datenaufteilung:} Implementierung einer Trainings-Validierungs-Test-Split-Logik, um die Generalisierungsfähigkeit empirisch zu messen.
+	\item \textbf{Austauschbare Fehlerfunktionen:} Erweiterung der \texttt{CostFunction} um die zugehörige Ableitung, sodass auch Kreuzentropie oder andere Verlustfunktionen genutzt werden können.
+	\item \textbf{Systematischer Modusvergleich:} Durchführung einer Studie über mehrere Seeds und Topologien, um die Robustheit der drei Trainingsmodi statistisch zu vergleichen.
+	\item \textbf{Batch-Training:} Wechsel von Online- zu Batch- oder Mini-Batch-Lernen, um die Stabilität des Gradientenabstiegs zu erhöhen.
+\end{itemize}
 
-Eine weitere Grenze ist die feste Kopplung des Trainings an die halbe
-Fehlerquadratsumme. Eine austauschbare Fehlerfunktion müsste zusätzlich
-ihre passende Ableitung bereitstellen. Auch ein Vergleich der drei
-Trainingsvarianten erfordert weitere Experimente: Das Bestehen derselben
-XOR-Tests allein zeigt noch nicht, welche Variante schneller oder über
-verschiedene Initialisierungen zuverlässiger lernt.
-
-\newpage
+\subsection{Anwendung in der Praxis}
+Obwohl das XOR-Problem einen rein akademischen Charakter hat, ist die zugrundeliegende Architektur des mehrschichtigen Feed-Forward-Netzes die Basis für viele reale Anwendungen. In der Praxis werden solche Netze beispielsweise zur Kreditwürdigkeitsprüfung (Klassifikation von Kundenprofilen), in der medizinischen Diagnostik (Erkennung von Tumoren in Bilddaten) oder in der Materialprüfung (Vorhersage von Bauteilversagen) eingesetzt \parencite{aggarwal2023}. Die in diesem Projekt implementierte Trennung von Forward-Pass, Fehlerberechnung und Backward-Pass entspricht dabei exakt dem Grundprinzip, das auch in großen Deep-Learning-Modellen (z.B. bei der Bildklassifikation mit CNNs oder Sprachmodellen) zum Einsatz kommt, dort jedoch um spezialisierte Schichttypen und Optimierer (z.B. Adam) ergänzt wird.
