@@ -28,6 +28,8 @@
 	marginparwidth=1.75cm,
 	headheight=13pt
 ]{geometry}
+\usepackage{array}
+
 
 % Grafik
 \usepackage{tikz}
@@ -104,6 +106,7 @@
 
 
 \title{Implementierung und Analyse eines Feed-Forward-Netzes in Java am Beispiel des XOR-Problems}
+\author{Liam Kelders \and Justus Braun \and Aaron Strohm \and Anton Niemann}
 \date{\today}
 
 \begin{document}
@@ -111,27 +114,7 @@
 \maketitle
 \tableofcontents
 
-\vspace{0.8cm}
-\section*{Arbeitsteilung}
-\begin{table}[h!]
-    \centering
-    \renewcommand{\arraystretch}{1.45}
-    \begin{tabular}{p{2.6cm} p{4.2cm} p{4.4cm} p{3.4cm}}
-        \toprule
-        \textbf{Teammitglied} & \textbf{Programmierung \& Testing} & \textbf{Dokumentation (Projektbuch)} & \textbf{Organisation \& Sonstiges} \\
-        \midrule
-        \textbf{Liam Kelders} & FFN-Basisarchitektur (Nodes, Layers, Activation) \& Loss-Funktion & Kapitel 1 (Einleitung) \& LaTeX-Grundgerüst & Verwaltung der Projektdokumentation auf LEA \\
-        
-        \textbf{Justus Braun} & Implementierung des Backpropagation-Algorithmus & Kapitel 2 (Theoretische Grundlagen) \& Kapitel 3 (Methodik) & Fachliche Aufbereitung der Backprop-Konzepte \\
-        
-        \textbf{Aaron Strohm} & Co-Entwicklung Delta-Regel \& Testen des Lernverhaltens & Kapitel 6 (Fazit \& Ausblick) & Konzeption \& Erstellung der Abschlusspräsentation \\
-        
-        \textbf{Anton Niemann} & Repository-Setup, Code-Integration \& Loss-History Logging & Kapitel 4 (Ergebnisse) \& Kapitel 5 (Diskussion), Feinschliff & Datenanalyse \& Visualisierung der Diagramme \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-\newpage
-
+\include{kapitel/verantwortlichkeiten}
 \include{kapitel/einleitung}
 \include{kapitel/theorie}
 \include{kapitel/methodik}
