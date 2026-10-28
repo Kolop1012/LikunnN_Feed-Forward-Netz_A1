@@ -4,7 +4,9 @@ import java.util.function.Function;
 
 /**
  * Enthält eine Auswahl verschiedener Aktivierungsfunktionen für neuronale
- * Netze.
+ * Netze. Jede Konstante stellt sowohl die Funktion selbst als auch ihre
+ * Ableitung als {@link Function} bereit, sodass sie im Vorwärts- und im
+ * Rückwärtsdurchlauf konsistent verwendet werden können.
  */
 public enum ActivationFunction {
 
@@ -46,22 +48,45 @@ public enum ActivationFunction {
 
     private final Function<Double, Double> function;
     private final Function<Double, Double> derivative;
-
+    
+    /**
+     * Erstellt eine neue Aktivierungsfunktion aus Funktions- und Ableitungsreferenz.
+     *
+     * @param function   Die Aktivierungsfunktion.
+     * @param derivative Ihre Ableitung.
+     */
+    
     ActivationFunction(Function<Double, Double> function, Function<Double, Double> derivative) {
         this.function = function;
         this.derivative = derivative;
     }
-
+    
+    /**
+     * Wendet die Aktivierungsfunktion auf den übergebenen Wert an.
+     *
+     * @param x Der Eingabewert (gewichtete Summe inkl. Bias).
+     * @return Der Aktivierungswert.
+     */
+    
     public double apply(double x) {
         return function.apply(x);
     }
-
+    
+    /**
+     * Wertet die Ableitung der Aktivierungsfunktion an der Stelle {@code x} aus.
+     * Wird im Backward-Pass zur Berechnung der Fehlersignale benötigt.
+     *
+     * @param x Der Eingabewert (gewichtete Summe inkl. Bias).
+     * @return Der Wert der Ableitung an der Stelle {@code x}.
+     */
+    
     public double applyDerivative(double x) {
         return derivative.apply(x);
     }
 
     /**
-     * Gibt die zugrundeliegende Funktion zurück.
+     * Gibt die zugrundeliegende Aktivierungsfunktion als Referenz zurück.
+     * Nützlich für Tests und zur Weitergabe an andere Komponenten.
      *
      * @return Die Funktionsreferenz.
      */
