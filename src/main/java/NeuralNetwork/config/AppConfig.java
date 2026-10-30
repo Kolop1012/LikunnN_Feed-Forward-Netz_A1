@@ -16,7 +16,7 @@ public record AppConfig(Dataset dataset, String mode, int epochs, int hiddenNeur
         if (args.length > 6)
             throw new IllegalArgumentException("Zu viele Argumente.");
         
-        double[][] data = CsvParser.parse(CsvParser.validateAndGetPath(args.length > 0 ? args[0] : "data/xor.csv"));
+        double[][] data = CsvParser.parse(CsvParser.validateAndGetPath(args.length > 0 ? args[0] : "datasets/xor.csv"));
         
         String mode = args.length > 1 ? args[1] : "sgd";
         if (!Set.of("sgd", "momentum", "adaptive")
