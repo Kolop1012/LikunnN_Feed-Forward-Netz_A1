@@ -1,4 +1,4 @@
-package NeuralNetwork;
+package NeuralNetwork.train;
 
 /**
  * Reduziert bei einem Fehlerplateau die Lernrate bis zur angegebenen Untergrenze.

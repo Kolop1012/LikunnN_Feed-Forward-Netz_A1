@@ -1,4 +1,4 @@
-package NeuralNetwork;
+package NeuralNetwork.model;
 
 /**
  * Ein funktionales Interface zur Definition von Kosten- oder Verlustfunktionen

@@ -1,4 +1,4 @@
-package NeuralNetwork;
+package NeuralNetwork.model;
 
 import java.util.function.Function;
 

@@ -1,18 +1,22 @@
 package NeuralNetwork;
 
+import NeuralNetwork.model.ActivationFunction;
+import NeuralNetwork.model.CostFunction;
+import NeuralNetwork.model.FFNeuralNetwork;
+import NeuralNetwork.model.Layer;
+import NeuralNetwork.train.LearningRateScheduler;
 
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 /**
  * Ausführbare Tests ohne zusätzliche Bibliotheken: java -cp bin NeuralNetwork.TestFFNeuralNetwork.
  */
 public class TestFFNeuralNetwork {
     private static int passed;
-
-
-
+    
     public static void main(String[] args) throws Exception {
         testForwardPass();
         testCostFunction();
@@ -50,11 +54,14 @@ public class TestFFNeuralNetwork {
     }
     
     private static void testCostFunction() {
-        near(0.5, CostFunction.HalfSquaredError.calculate(new double[]{ 1 }, new double[]{ 0 }), 0.0, "Halbe Fehlerquadratsumme bei einer Ausgabe");
+        near(0.5, CostFunction.HalfSquaredError.calculate(new double[]{ 1 }, new double[]{ 0 }), 0.0,
+                "Halbe Fehlerquadratsumme bei einer Ausgabe");
         double[] output = { 3, 4, 5 };
         double[] target = { 1, 1, 1 };
-        near(14.5, CostFunction.HalfSquaredError.calculate(output, target), 0.0, "Trainingsfehler bei drei Ausgaben ohne Mittelung");
-        near(29.0 / 3.0, CostFunction.MeanSquaredError.calculate(output, target), 1e-12, "MSE bleibt als eigenständige Messgröße verfügbar");
+        near(14.5, CostFunction.HalfSquaredError.calculate(output, target), 0.0,
+                "Trainingsfehler bei drei Ausgaben ohne Mittelung");
+        near(29.0 / 3.0, CostFunction.MeanSquaredError.calculate(output, target), 1e-12,
+                "MSE bleibt als eigenständige Messgröße verfügbar");
         pass("Fehlerfunktion der Folien: halbe Fehlerquadratsumme");
     }
     
@@ -176,7 +183,8 @@ public class TestFFNeuralNetwork {
     }
     
     private static void testValidation() {
-        rejects(IllegalArgumentException.class, () -> new FFNeuralNetwork(new int[]{ 2, 0, 1 }, ActivationFunction.SIGMOID));
+        rejects(IllegalArgumentException.class,
+                () -> new FFNeuralNetwork(new int[]{ 2, 0, 1 }, ActivationFunction.SIGMOID));
         rejects(IllegalArgumentException.class, () -> new FFNeuralNetwork(new int[]{ 1, 1 }, null));
         FFNeuralNetwork net = new FFNeuralNetwork(new int[]{ 1, 1 }, ActivationFunction.LINEAR, 42L);
         rejects(IllegalStateException.class, () -> net.train(0.1, new double[]{ 0 }));
@@ -190,7 +198,8 @@ public class TestFFNeuralNetwork {
         rejects(IllegalArgumentException.class, () -> net.train(0.1, new double[]{ Double.NaN }));
         net.train(0.1, new double[]{ 0 });
         rejects(IllegalStateException.class, () -> net.train(0.1, new double[]{ 0 }));
-        rejects(IllegalArgumentException.class, () -> CostFunction.MeanSquaredError.calculate(new double[0], new double[0]));
+        rejects(IllegalArgumentException.class,
+                () -> CostFunction.MeanSquaredError.calculate(new double[0], new double[0]));
         rejects(IllegalArgumentException.class, () -> new LearningRateScheduler(0, 0.5, 0.01, 0.0));
         rejects(IllegalArgumentException.class, () -> new LearningRateScheduler(1, 1.0, 0.01, 0.0));
         LearningRateScheduler scheduler = new LearningRateScheduler(2, 0.5, 0.1, 0.0);
@@ -227,7 +236,8 @@ public class TestFFNeuralNetwork {
     }
     
     private static void near(double expected, double actual, double tolerance, String message) {
-        check(Double.isFinite(actual) && Math.abs(expected - actual) <= tolerance, message + ": erwartet " + expected + ", erhalten " + actual);
+        check(Double.isFinite(actual) && Math.abs(expected - actual) <= tolerance,
+                message + ": erwartet " + expected + ", erhalten " + actual);
     }
     
     private static void check(boolean condition, String message) {

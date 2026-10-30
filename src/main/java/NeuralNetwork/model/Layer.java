@@ -1,4 +1,4 @@
-package NeuralNetwork;
+package NeuralNetwork.model;
 
 import java.util.Random;
 
@@ -172,7 +172,8 @@ public class Layer {
             // Fall A: Ausgabeschicht (Output Layer)
             for (int i = 0; i < currentSize; i++) {
                 double output = neurons[i].getValue();
-                double derivative = neurons[i].getActivationFunction().applyDerivative(lastRawInputs[i]);
+                double derivative = neurons[i].getActivationFunction()
+                                              .applyDerivative(lastRawInputs[i]);
                 // Folie 10: Delta = f'(net) * (Zielwert - Ausgabe).
                 currentDeltas[i] = (targets[i] - output) * derivative;
             }
@@ -184,7 +185,8 @@ public class Layer {
                     // Multiplikation mit transponierten Gewichten der rechten Schicht
                     sumError += nextLayerDeltas[k] * nextLayerWeights[k][j];
                 }
-                double derivative = neurons[j].getActivationFunction().applyDerivative(lastRawInputs[j]);
+                double derivative = neurons[j].getActivationFunction()
+                                              .applyDerivative(lastRawInputs[j]);
                 currentDeltas[j] = sumError * derivative;
             }
         }

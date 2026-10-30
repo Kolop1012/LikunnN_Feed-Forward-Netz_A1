@@ -1,4 +1,4 @@
-package NeuralNetwork;
+package NeuralNetwork.model;
 
 /**
  * Repräsentiert ein einzelnes Neuron (Knoten) innerhalb einer Schicht des

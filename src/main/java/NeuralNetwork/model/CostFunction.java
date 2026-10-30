@@ -1,4 +1,4 @@
-package NeuralNetwork;
+package NeuralNetwork.model;
 
 /**
  * Repräsentiert verschiedene Kostenfunktionen (Loss Functions) zur Bewertung

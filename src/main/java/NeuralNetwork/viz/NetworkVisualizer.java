@@ -1,4 +1,4 @@
-package NeuralNetwork;
+package NeuralNetwork.viz;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
