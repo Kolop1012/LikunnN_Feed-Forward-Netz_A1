@@ -10,7 +10,9 @@ import java.nio.file.Path;
  */
 public class TestFFNeuralNetwork {
     private static int passed;
-    
+
+
+
     public static void main(String[] args) throws Exception {
         testForwardPass();
         testCostFunction();
