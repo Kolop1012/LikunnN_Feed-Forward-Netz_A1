@@ -56,7 +56,8 @@ public class App {
     public static void main(String[] args) {
 
         // Nur debugging
-        args = new String[]{"data/data_cats_modified.csv", "sgd", "1000", "1-1", "5"};
+        args = new String[]{"data/xor.csv", "sgd", "10000", "1-1", "5"};
+        //args = new String[]{"data/data_iris_modified.csv", "sgd", "10000", "4-4", "50"};
 
         try {
             AppConfig argumente = validateArgs(args);
@@ -86,6 +87,7 @@ public class App {
         System.out.printf("Modus: %s | Momentum: %.1f | Epochen: %d%n", mode, momentum, epochs);
         System.out.printf(Locale.ROOT, "Mittlerer Fehler E vor Training: %.6f%n", meanLoss(net, data, indexausgabewerte, inputneuronen, outputneuronen));
 
+        List<Double> lossHistory = new ArrayList<>();
         for (int epoch = 1; epoch <= epochs; epoch++) {
             // Online-Lernen: ein Update pro Datenzeile
             for (double[] row : data) {
@@ -98,6 +100,7 @@ public class App {
 
             // Alle Muster erneut auswerten: einheitlicher Gewichtsstand für den Epochenfehler.
             double loss = meanLoss(net, data, indexausgabewerte, inputneuronen, outputneuronen);
+            lossHistory.add(loss);
             if (!Double.isFinite(loss)) {
                 throw new IllegalArgumentException("Training instabil. Eingaben auf einen kleinen Wertebereich skalieren.");
             }
@@ -137,6 +140,21 @@ public class App {
                     Arrays.toString(inputs), Arrays.toString(outputs), Arrays.toString(targets));
         }
         System.out.printf("Korrekt auf den Trainingsmustern: %d/%d%n", correct, data.length);
+
+        double[][][] finalWeights = net.getWeights();
+        double[][] finalBiases = net.getBiases();
+        NetworkVisualizer.saveVisualization(
+                "grafik_auswertung.png",
+                lossHistory,
+                new int[]{inputneuronen, neuronenhiddenlayer, outputneuronen},
+                finalWeights,
+                finalBiases,
+                mode,
+                learningRate,
+                epochs,       // Die tatsächliche Anzahl der Epochen
+                correct,      // Wie viele Muster korrekt geraten wurden
+                data.length   // Wie viele Muster es insgesamt gab
+        );
     }
 
 // Hilfsmethoden zum dynamischen Aufteilen der Spalten

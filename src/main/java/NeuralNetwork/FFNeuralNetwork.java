@@ -192,4 +192,53 @@ public class FFNeuralNetwork {
             }
         }
     }
+    public double[][][] getWeights() {
+        int numTransitions = layers.length - 1;
+        double[][][] weights = new double[numTransitions][][];
+
+        for (int l = 1; l < layers.length; l++) {
+            double[][] layerWeights = layers[l].getWeights();
+            int targetCount = layers[l].getNeurons().length;
+            int sourceCount = layers[l - 1].getNeurons().length;
+
+            double[][] wMatrix = new double[sourceCount][targetCount];
+            for (int t = 0; t < targetCount; t++) {
+                for (int s = 0; s < sourceCount; s++) {
+                    wMatrix[s][t] = layerWeights[t][s];
+                }
+            }
+            weights[l - 1] = wMatrix;
+        }
+
+        return weights;
+    }
+
+    /**
+     * Gibt die Bias-Werte aller Schichten ab der ersten verdeckten Schicht zurück.
+     * Format: [layer_index][target_neuron]
+     * layer_index 0 = Biases der Neuronen in Layer 1 (Hidden Layer)
+     */
+    public double[][] getBiases() {
+        int numTransitions = layers.length - 1;
+        double[][] biases = new double[numTransitions][];
+
+        for (int l = 1; l < layers.length; l++) {
+            double[][] layerWeights = layers[l].getWeights();
+            int targetCount = layers[l].getNeurons().length;
+            int sourceCount = layers[l - 1].getNeurons().length;
+
+            double[] bVector = new double[targetCount];
+            for (int t = 0; t < targetCount; t++) {
+                // Der Bias steht als letztes Element in der Spaltenreihe des Zielneurons
+                if (layerWeights[t].length > sourceCount) {
+                    bVector[t] = layerWeights[t][sourceCount];
+                } else {
+                    bVector[t] = 0.0;
+                }
+            }
+            biases[l - 1] = bVector;
+        }
+
+        return biases;
+    }
 }
