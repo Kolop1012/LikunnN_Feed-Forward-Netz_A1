@@ -14,6 +14,8 @@ import java.nio.file.Path;
 /**
  * Ausführbare Tests ohne zusätzliche Bibliotheken: java -cp bin NeuralNetwork.TestFFNeuralNetwork.
  */
+
+@Deprecated
 public class TestFFNeuralNetwork {
     private static int passed;
     
@@ -208,8 +210,8 @@ public class TestFFNeuralNetwork {
     }
     
     private static void testCsv() throws Exception {
-        check(App.readData(Path.of("data/xor.csv")).length == 4, "Vier XOR-Zeilen laden");
-        check(App.readData(Path.of("data/and.csv")).length == 4, "Vier AND-Zeilen laden");
+        check(App.readData(Path.of("datasets/xor.csv")).length == 4, "Vier XOR-Zeilen laden");
+        check(App.readData(Path.of("datasets/and.csv")).length == 4, "Vier AND-Zeilen laden");
         // System-Temp-Verzeichnis statt "bin/", damit der Test sowohl per
         // `java -cp bin ...` als auch in IntelliJ (target/classes) läuft.
         Path file = Files.createTempFile("invalid-data-", ".csv");
