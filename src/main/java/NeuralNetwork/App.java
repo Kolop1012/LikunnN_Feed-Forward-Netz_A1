@@ -9,10 +9,12 @@ import java.util.List;
 import java.util.Locale;
 import java.nio.file.InvalidPathException;
 import java.util.Arrays;
-/** Kleine Konsolen-Demo: zwei Eingaben, vier Hidden-Neuronen, ein binärer Zielwert. */
+
+/** Kleine Konsolen-Demo mit dynamischer Input- und Output-Skalierung. */
 public class App {
-    public record AppConfig(double[][] data, String mode, int epochs, int[] indexausgabewerte, int inputneuronen, int neuronenhiddenlayer, int outputneuronen){};
-    public static AppConfig validateArgs(String[] args) throws  IOException{
+
+    public record AppConfig(double[][] data, String mode, int epochs, int[] indexausgabewerte, int inputneuronen, int neuronenhiddenlayer, int outputneuronen){}
+    public static AppConfig validateArgs(String[] args) throws IOException {
         if (args.length > 5) {
             throw new IllegalArgumentException("Zu viele Argumente.");
         }
@@ -27,9 +29,11 @@ public class App {
         if (epochs < 1) {
             throw new IllegalArgumentException("Die Epochenzahl muss positiv sein.");
         }
-        int inputneuronen = 2;
-        int outputneuronen = 1;
-        int indexausgabewerte[];
+
+        int inputneuronen;
+        int outputneuronen;
+        int[] indexausgabewerte;
+
         if (args.length > 3) {
             if (!args[3].matches("^\\d+-\\d+$")) {
                 throw new IllegalArgumentException("Output-Spalten ungültig angegeben: '" + args[3] + "' (Erwartetes Format: 'min-max', z. B. '3-5')");
@@ -37,27 +41,26 @@ public class App {
             String[] parts = args[3].split("-");
             indexausgabewerte = new int[]{Integer.parseInt(parts[0]), Integer.parseInt(parts[1])};
             outputneuronen = indexausgabewerte[1] - indexausgabewerte[0] + 1;
-            inputneuronen = data[1].length - outputneuronen;
+            inputneuronen = data[0].length - outputneuronen;
         } else {
             indexausgabewerte = new int[]{2, 2};
             outputneuronen = 1;
             inputneuronen = 2;
         }
+
         int neuronenhiddenlayer = 4;
-        if(args.length > 4){
+        if (args.length > 4) {
             neuronenhiddenlayer = Integer.parseInt(args[4]);
             if (neuronenhiddenlayer < 1) {
                 throw new IllegalArgumentException("Mindestens ein Neuron pro Hiddenlayer benötigt");
             }
         }
-        return new AppConfig(data,mode, epochs, indexausgabewerte, inputneuronen, neuronenhiddenlayer , outputneuronen);
+        return new AppConfig(data, mode, epochs, indexausgabewerte, inputneuronen, neuronenhiddenlayer, outputneuronen);
     }
 
     public static void main(String[] args) {
-
         // Nur debugging
-        args = new String[]{"data/data_iris_modified.csv", "sgd", "100000", "4-4", "20"};
-        //args = new String[]{"data/data_iris_modified.csv", "sgd", "10000", "4-4", "50"};
+        args = new String[]{"data/data_cats_modified.csv", "sgd", "1000", "1-1", "2"};
 
         try {
             AppConfig argumente = validateArgs(args);
@@ -83,7 +86,21 @@ public class App {
         double momentum = mode.equals("sgd") ? 0.0 : 0.9;
         LearningRateScheduler scheduler = new LearningRateScheduler(200, 0.5, 0.01, 0.00001);
 
-        // --- NEU: Min/Max der Zielwerte (Targets) für die Skalierung ermitteln ---
+        // --- 1. Min/Max für Inputs ermitteln ---
+        double[] inputMins = new double[inputneuronen];
+        double[] inputMaxes = new double[inputneuronen];
+        Arrays.fill(inputMins, Double.POSITIVE_INFINITY);
+        Arrays.fill(inputMaxes, Double.NEGATIVE_INFINITY);
+
+        for (double[] row : data) {
+            double[] in = extractInputs(row, indexausgabewerte, inputneuronen);
+            for (int k = 0; k < inputneuronen; k++) {
+                if (in[k] < inputMins[k]) inputMins[k] = in[k];
+                if (in[k] > inputMaxes[k]) inputMaxes[k] = in[k];
+            }
+        }
+
+        // --- 2. Min/Max für Targets ermitteln ---
         double[] targetMins = new double[outputneuronen];
         double[] targetMaxes = new double[outputneuronen];
         Arrays.fill(targetMins, Double.POSITIVE_INFINITY);
@@ -100,7 +117,7 @@ public class App {
         System.out.printf("Muster: %d | Netz: %d-%d-%d | Seed: 42%n", data.length, inputneuronen, neuronenhiddenlayer, outputneuronen);
         System.out.printf("Modus: %s | Momentum: %.1f | Epochen: %d%n", mode, momentum, epochs);
         System.out.printf(Locale.ROOT, "Mittlerer Fehler E vor Training: %.6f%n",
-                meanLoss(net, data, indexausgabewerte, inputneuronen, outputneuronen, targetMins, targetMaxes));
+                meanLoss(net, data, indexausgabewerte, inputneuronen, outputneuronen, inputMins, inputMaxes, targetMins, targetMaxes));
 
         List<Double> lossHistory = new ArrayList<>();
         for (int epoch = 1; epoch <= epochs; epoch++) {
@@ -109,7 +126,10 @@ public class App {
                 double[] inputs = extractInputs(row, indexausgabewerte, inputneuronen);
                 double[] targets = extractTargets(row, indexausgabewerte, outputneuronen);
 
-                // Zielwerte für das Netz auf [0, 1] herunterskalieren
+                // Eingaben und Zielwerte auf [0, 1] skalieren
+                for (int k = 0; k < inputneuronen; k++) {
+                    inputs[k] = scale(inputs[k], inputMins[k], inputMaxes[k]);
+                }
                 for (int k = 0; k < outputneuronen; k++) {
                     targets[k] = scale(targets[k], targetMins[k], targetMaxes[k]);
                 }
@@ -118,7 +138,7 @@ public class App {
                 net.train(learningRate, targets, momentum);
             }
 
-            double loss = meanLoss(net, data, indexausgabewerte, inputneuronen, outputneuronen, targetMins, targetMaxes);
+            double loss = meanLoss(net, data, indexausgabewerte, inputneuronen, outputneuronen, inputMins, inputMaxes, targetMins, targetMaxes);
             lossHistory.add(loss);
 
             if (!Double.isFinite(loss)) {
@@ -139,19 +159,23 @@ public class App {
         System.out.println("\nEingaben -> Ausgaben | Vorhergesagt | Ziel");
         int correct = 0;
         for (double[] row : data) {
-            double[] inputs = extractInputs(row, indexausgabewerte, inputneuronen);
+            double[] rawInputs = extractInputs(row, indexausgabewerte, inputneuronen);
+            double[] scaledInputs = new double[inputneuronen];
+            for (int k = 0; k < inputneuronen; k++) {
+                scaledInputs[k] = scale(rawInputs[k], inputMins[k], inputMaxes[k]);
+            }
+
             double[] originalTargets = extractTargets(row, indexausgabewerte, outputneuronen);
 
-            // Netz gibt skalierte Werte zwischen 0 und 1 zurück
-            double[] rawOutputs = net.feedForward(inputs);
+            // Vorwärtsdurchlauf mit skalierten Inputs
+            double[] rawOutputs = net.feedForward(scaledInputs);
             double[] finalOutputs = new double[outputneuronen];
 
             boolean isCorrect = true;
             for (int k = 0; k < outputneuronen; k++) {
-                // Ausgabe wieder in den echten Wertebereich hochskalieren
+                // Ausgaben auf ursprünglichen Wertebereich hochskalieren
                 finalOutputs[k] = unscale(rawOutputs[k], targetMins[k], targetMaxes[k]);
 
-                // Für Klassifikations-Trefferquote: Auf nächste Ganzzahl runden
                 long predictedClass = Math.round(finalOutputs[k]);
                 long actualClass = Math.round(originalTargets[k]);
 
@@ -163,9 +187,8 @@ public class App {
                 correct++;
             }
 
-            // Ausgaben runden für hübschere Konsolen-Anzeige
             System.out.printf(Locale.ROOT, "%s -> %s | Ziel: %s%n",
-                    Arrays.toString(inputs), Arrays.toString(finalOutputs), Arrays.toString(originalTargets));
+                    Arrays.toString(rawInputs), Arrays.toString(finalOutputs), Arrays.toString(originalTargets));
         }
         System.out.printf("Korrekt auf den Trainingsmustern: %d/%d%n", correct, data.length);
 
@@ -177,8 +200,6 @@ public class App {
                 finalWeights, finalBiases, mode, learningRate, epochs, correct, data.length
         );
     }
-
-// Hilfsmethoden zum dynamischen Aufteilen der Spalten
 
     private static double[] extractInputs(double[] row, int[] outputIndices, int expectedInputs) {
         double[] inputs = new double[expectedInputs];
@@ -201,7 +222,6 @@ public class App {
     }
 
     private static boolean isOutputColumn(int col, int[] outputIndices) {
-        // Prüft, ob der Spaltenindex innerhalb des angegebenen Min-Max-Bereichs liegt
         return col >= outputIndices[0] && col <= outputIndices[1];
     }
 
@@ -211,15 +231,11 @@ public class App {
         if (lines.isEmpty()) {
             throw new IllegalArgumentException("Datei ist leer.");
         }
-
-        // Prüfen, ob nach dem Header mindestens eine Datenzeile existiert
         if (lines.size() < 2) {
             throw new IllegalArgumentException("Die CSV-Datei enthält keine Trainingsmuster.");
         }
 
         List<double[]> rows = new ArrayList<>();
-
-        // Regex "[,;]" spaltet sowohl bei ',' als auch bei ';'
         int spaltenanzahl = lines.get(1).split("[,;]", -1).length;
 
         for (int i = 1; i < lines.size(); i++) {
@@ -227,7 +243,6 @@ public class App {
                 continue;
             }
 
-            // Spalten trennen nach Komma oder Semikolon
             String[] cells = lines.get(i).split("[,;]", -1);
             if (cells.length != spaltenanzahl) {
                 throw new IllegalArgumentException("CSV-Zeile " + (i + 1) + ": " + spaltenanzahl + " Zahlen erwartet.");
@@ -255,13 +270,15 @@ public class App {
         return rows.toArray(new double[0][]);
     }
 
-    private static double meanLoss(FFNeuralNetwork net, double[][] data, int[] indexausgabewerte, int inputneuronen, int outputneuronen, double[] targetMins, double[] targetMaxes) {
+    private static double meanLoss(FFNeuralNetwork net, double[][] data, int[] indexausgabewerte, int inputneuronen, int outputneuronen, double[] inputMins, double[] inputMaxes, double[] targetMins, double[] targetMaxes) {
         double total = 0.0;
         for (double[] row : data) {
             double[] inputs = extractInputs(row, indexausgabewerte, inputneuronen);
             double[] targets = extractTargets(row, indexausgabewerte, outputneuronen);
 
-            // Ziele für die Fehlerberechnung auf [0, 1] skalieren
+            for (int k = 0; k < inputneuronen; k++) {
+                inputs[k] = scale(inputs[k], inputMins[k], inputMaxes[k]);
+            }
             for (int k = 0; k < outputneuronen; k++) {
                 targets[k] = scale(targets[k], targetMins[k], targetMaxes[k]);
             }
@@ -272,10 +289,8 @@ public class App {
         return total / data.length;
     }
 
-    // --- NEU: Hilfsmethoden zur Normalisierung ---
-
     private static double scale(double val, double min, double max) {
-        if (min == max) return 0.5; // Verhindert Division durch Null bei konstanten Zielwerten
+        if (min == max) return 0.5;
         return (val - min) / (max - min);
     }
 
@@ -284,28 +299,23 @@ public class App {
         return val * (max - min) + min;
     }
 
-
     private static Path validateAndGetPath(String rawPath) {
         Path path;
 
-        // 1. Syntaktische Prüfung (Ungültige Zeichen/Formate abfangen)
         try {
             path = Path.of(rawPath);
         } catch (InvalidPathException e) {
             throw new IllegalArgumentException("Der eingegebene Pfad enthält ungültige Zeichen: " + rawPath);
         }
 
-        // 2. Existiert die Datei überhaupt?
         if (!Files.exists(path)) {
             throw new IllegalArgumentException("Datei nicht gefunden: " + path.toAbsolutePath());
         }
 
-        // 3. Ist es wirklich eine Datei (und kein Verzeichnis/Ordner)?
         if (!Files.isRegularFile(path)) {
             throw new IllegalArgumentException("Der Pfad verweist auf einen Ordner, keine Datei: " + path);
         }
 
-        // 4. Kann das Programm die Datei lesen?
         if (!Files.isReadable(path)) {
             throw new IllegalArgumentException("Keine Leserechte für die Datei: " + path);
         }

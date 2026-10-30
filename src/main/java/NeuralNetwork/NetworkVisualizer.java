@@ -140,7 +140,7 @@ public class NetworkVisualizer {
         g.setColor(Color.BLACK);
         g.drawString(mode.toUpperCase() + " (Lernrate " + lr + ")", x + w - 110, y + 27);
 
-        String caption1 = String.format(Locale.GERMAN, "Abbildung 1: Lernverlauf (Loss History) für das XOR-Problem über %,d Epochen im %s-Modus. Dargestellt", totalEpochs, mode.toUpperCase());
+        String caption1 = String.format(Locale.GERMAN, "Abbildung 1: Lernverlauf (Loss History) für das Katzen-Problem über %,d Epochen im %s-Modus. Dargestellt", totalEpochs, mode.toUpperCase());
         String caption2 = "ist die halbe Fehlerquadratsumme.";
         g.drawString(caption1, x, y + h + 85);
         g.drawString(caption2, x, y + h + 105);
