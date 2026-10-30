@@ -56,7 +56,7 @@ public class App {
     public static void main(String[] args) {
 
         // Nur debugging
-        args = new String[]{"data/xor.csv", "sgd", "10000", "1-1", "5"};
+        args = new String[]{"data/data_iris_modified.csv", "sgd", "100000", "4-4", "20"};
         //args = new String[]{"data/data_iris_modified.csv", "sgd", "10000", "4-4", "50"};
 
         try {
@@ -83,24 +83,44 @@ public class App {
         double momentum = mode.equals("sgd") ? 0.0 : 0.9;
         LearningRateScheduler scheduler = new LearningRateScheduler(200, 0.5, 0.01, 0.00001);
 
+        // --- NEU: Min/Max der Zielwerte (Targets) für die Skalierung ermitteln ---
+        double[] targetMins = new double[outputneuronen];
+        double[] targetMaxes = new double[outputneuronen];
+        Arrays.fill(targetMins, Double.POSITIVE_INFINITY);
+        Arrays.fill(targetMaxes, Double.NEGATIVE_INFINITY);
+
+        for (double[] row : data) {
+            double[] t = extractTargets(row, indexausgabewerte, outputneuronen);
+            for (int k = 0; k < outputneuronen; k++) {
+                if (t[k] < targetMins[k]) targetMins[k] = t[k];
+                if (t[k] > targetMaxes[k]) targetMaxes[k] = t[k];
+            }
+        }
+
         System.out.printf("Muster: %d | Netz: %d-%d-%d | Seed: 42%n", data.length, inputneuronen, neuronenhiddenlayer, outputneuronen);
         System.out.printf("Modus: %s | Momentum: %.1f | Epochen: %d%n", mode, momentum, epochs);
-        System.out.printf(Locale.ROOT, "Mittlerer Fehler E vor Training: %.6f%n", meanLoss(net, data, indexausgabewerte, inputneuronen, outputneuronen));
+        System.out.printf(Locale.ROOT, "Mittlerer Fehler E vor Training: %.6f%n",
+                meanLoss(net, data, indexausgabewerte, inputneuronen, outputneuronen, targetMins, targetMaxes));
 
         List<Double> lossHistory = new ArrayList<>();
         for (int epoch = 1; epoch <= epochs; epoch++) {
-            // Online-Lernen: ein Update pro Datenzeile
+            // Online-Lernen
             for (double[] row : data) {
                 double[] inputs = extractInputs(row, indexausgabewerte, inputneuronen);
                 double[] targets = extractTargets(row, indexausgabewerte, outputneuronen);
+
+                // Zielwerte für das Netz auf [0, 1] herunterskalieren
+                for (int k = 0; k < outputneuronen; k++) {
+                    targets[k] = scale(targets[k], targetMins[k], targetMaxes[k]);
+                }
 
                 net.feedForward(inputs);
                 net.train(learningRate, targets, momentum);
             }
 
-            // Alle Muster erneut auswerten: einheitlicher Gewichtsstand für den Epochenfehler.
-            double loss = meanLoss(net, data, indexausgabewerte, inputneuronen, outputneuronen);
+            double loss = meanLoss(net, data, indexausgabewerte, inputneuronen, outputneuronen, targetMins, targetMaxes);
             lossHistory.add(loss);
+
             if (!Double.isFinite(loss)) {
                 throw new IllegalArgumentException("Training instabil. Eingaben auf einen kleinen Wertebereich skalieren.");
             }
@@ -120,15 +140,22 @@ public class App {
         int correct = 0;
         for (double[] row : data) {
             double[] inputs = extractInputs(row, indexausgabewerte, inputneuronen);
-            double[] targets = extractTargets(row, indexausgabewerte, outputneuronen);
+            double[] originalTargets = extractTargets(row, indexausgabewerte, outputneuronen);
 
-            double[] outputs = net.feedForward(inputs);
+            // Netz gibt skalierte Werte zwischen 0 und 1 zurück
+            double[] rawOutputs = net.feedForward(inputs);
+            double[] finalOutputs = new double[outputneuronen];
 
-            // Auswertung (Beispielhaft für 1 Output-Neuron mit Threshold 0.5)
             boolean isCorrect = true;
             for (int k = 0; k < outputneuronen; k++) {
-                int predicted = outputs[k] >= 0.5 ? 1 : 0;
-                if (predicted != (int) targets[k]) {
+                // Ausgabe wieder in den echten Wertebereich hochskalieren
+                finalOutputs[k] = unscale(rawOutputs[k], targetMins[k], targetMaxes[k]);
+
+                // Für Klassifikations-Trefferquote: Auf nächste Ganzzahl runden
+                long predictedClass = Math.round(finalOutputs[k]);
+                long actualClass = Math.round(originalTargets[k]);
+
+                if (predictedClass != actualClass) {
                     isCorrect = false;
                 }
             }
@@ -136,24 +163,18 @@ public class App {
                 correct++;
             }
 
+            // Ausgaben runden für hübschere Konsolen-Anzeige
             System.out.printf(Locale.ROOT, "%s -> %s | Ziel: %s%n",
-                    Arrays.toString(inputs), Arrays.toString(outputs), Arrays.toString(targets));
+                    Arrays.toString(inputs), Arrays.toString(finalOutputs), Arrays.toString(originalTargets));
         }
         System.out.printf("Korrekt auf den Trainingsmustern: %d/%d%n", correct, data.length);
 
         double[][][] finalWeights = net.getWeights();
         double[][] finalBiases = net.getBiases();
         NetworkVisualizer.saveVisualization(
-                "grafik_auswertung.png",
-                lossHistory,
+                "grafik_auswertung.png", lossHistory,
                 new int[]{inputneuronen, neuronenhiddenlayer, outputneuronen},
-                finalWeights,
-                finalBiases,
-                mode,
-                learningRate,
-                epochs,       // Die tatsächliche Anzahl der Epochen
-                correct,      // Wie viele Muster korrekt geraten wurden
-                data.length   // Wie viele Muster es insgesamt gab
+                finalWeights, finalBiases, mode, learningRate, epochs, correct, data.length
         );
     }
 
@@ -234,16 +255,33 @@ public class App {
         return rows.toArray(new double[0][]);
     }
 
-    private static double meanLoss(FFNeuralNetwork net, double[][] data, int[] indexausgabewerte, int inputneuronen, int outputneuronen) {
+    private static double meanLoss(FFNeuralNetwork net, double[][] data, int[] indexausgabewerte, int inputneuronen, int outputneuronen, double[] targetMins, double[] targetMaxes) {
         double total = 0.0;
         for (double[] row : data) {
             double[] inputs = extractInputs(row, indexausgabewerte, inputneuronen);
             double[] targets = extractTargets(row, indexausgabewerte, outputneuronen);
 
+            // Ziele für die Fehlerberechnung auf [0, 1] skalieren
+            for (int k = 0; k < outputneuronen; k++) {
+                targets[k] = scale(targets[k], targetMins[k], targetMaxes[k]);
+            }
+
             total += CostFunction.HalfSquaredError.calculate(
                     net.feedForward(inputs), targets);
         }
         return total / data.length;
+    }
+
+    // --- NEU: Hilfsmethoden zur Normalisierung ---
+
+    private static double scale(double val, double min, double max) {
+        if (min == max) return 0.5; // Verhindert Division durch Null bei konstanten Zielwerten
+        return (val - min) / (max - min);
+    }
+
+    private static double unscale(double val, double min, double max) {
+        if (min == max) return min;
+        return val * (max - min) + min;
     }
 
 

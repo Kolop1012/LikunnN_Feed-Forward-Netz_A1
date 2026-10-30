@@ -22,7 +22,6 @@ public class NetworkVisualizer {
             int correctSamples,
             int totalSamples
     ) throws IOException {
-        // Höhe leicht vergrößert, um Platz für die Bildunterschriften zu schaffen
         int width = 850;
         int height = 1100;
 
@@ -38,10 +37,10 @@ public class NetworkVisualizer {
         g.setColor(Color.WHITE);
         g.fillRect(0, 0, width, height);
 
-        // 1. Plot zeichnen (inklusive dynamischer X-Achse und Abbildungstext)
+        // 1. Plot zeichnen
         drawLossPlot(g, lossHistory, 120, 80, 600, 300, mode, learningRate, totalEpochs);
 
-        // 2. Netzwerk zeichnen (inklusive Auswertungstext unten)
+        // 2. Netzwerk zeichnen (Mit dynamischer Skalierung)
         drawNetworkGraph(g, networkLayers, weights, biases, 120, 540, 600, 450, correctSamples, totalSamples);
 
         g.dispose();
@@ -80,7 +79,7 @@ public class NetworkVisualizer {
         // --- X-Achse (Dynamisch skaliert) ---
         int maxEpoch = Math.max(1, lossHistory.size() - 1);
         int exponent = (int) Math.log10(maxEpoch);
-        double divisor = Math.pow(10, exponent); // z.B. 10.000 -> 10^4
+        double divisor = Math.pow(10, exponent);
 
         for (int i = 0; i <= 10; i++) {
             int xPos = x + (int) ((i / 10.0) * w);
@@ -88,18 +87,15 @@ public class NetworkVisualizer {
             g.drawLine(xPos, y, xPos, y + h);
             g.setColor(Color.BLACK);
 
-            // X-Achsen Beschriftung berechnen (z.B. "0.5", "1.0" oder ganze Zahlen bei < 10 Epochen)
             double tickVal = (maxEpoch * (i / 10.0)) / divisor;
             String tickLabel = (exponent > 0) ? String.format(Locale.US, "%.1f", tickVal) : String.format(Locale.US, "%.0f", tickVal);
             g.drawString(tickLabel, xPos - 10, y + h + 20);
         }
 
-        // Rahmen
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(1.0f));
         g.drawRect(x, y, w, h);
 
-        // Achsenbeschriftungen
         g.drawString("Epoche", x + w / 2 - 20, y + h + 45);
         if (exponent > 0) {
             g.setFont(new Font("Serif", Font.BOLD, 14));
@@ -112,7 +108,7 @@ public class NetworkVisualizer {
         g2.drawString("Mittlerer Fehler E", x - 55, y + h / 2 + 50);
         g2.dispose();
 
-        // --- Loss-Kurve zeichnen ---
+        // --- Loss-Kurve ---
         if (lossHistory != null && !lossHistory.isEmpty()) {
             g.setColor(Color.BLUE);
             g.setStroke(new BasicStroke(1.5f));
@@ -134,7 +130,6 @@ public class NetworkVisualizer {
             }
         }
 
-        // Legende
         g.setStroke(new BasicStroke(1.0f));
         g.setColor(Color.WHITE);
         g.fillRect(x + w - 160, y + 10, 150, 25);
@@ -145,11 +140,8 @@ public class NetworkVisualizer {
         g.setColor(Color.BLACK);
         g.drawString(mode.toUpperCase() + " (Lernrate " + lr + ")", x + w - 110, y + 27);
 
-        // --- BILDUNTERSCHRIFT (CAPTION) ---
-        // Locale.GERMAN formatiert 10000 automatisch zu 10.000 (mit Punkt als Tausendertrenner)
         String caption1 = String.format(Locale.GERMAN, "Abbildung 1: Lernverlauf (Loss History) für das XOR-Problem über %,d Epochen im %s-Modus. Dargestellt", totalEpochs, mode.toUpperCase());
         String caption2 = "ist die halbe Fehlerquadratsumme.";
-
         g.drawString(caption1, x, y + h + 85);
         g.drawString(caption2, x, y + h + 105);
     }
@@ -157,21 +149,33 @@ public class NetworkVisualizer {
     private static void drawNetworkGraph(Graphics2D g, int[] layers, double[][][] weights, double[][] biases, int x, int y, int w, int h, int correctSamples, int totalSamples) {
         int numLayers = layers.length;
         int layerSpacing = w / (numLayers - 1);
-        int radius = 25;
+
+        // --- DYNAMISCHE SKALIERUNG ---
+        // 1. Größte Schicht ermitteln
+        int maxNodes = 0;
+        for (int count : layers) {
+            maxNodes = Math.max(maxNodes, count);
+        }
+
+        // 2. Maximaler vertikaler Abstand (capped bei 80px)
+        int vGap = Math.min(80, (h - 40) / maxNodes);
+
+        // 3. Radius der Neuronen abhängig vom Platz berechnen (min 4px, max 25px)
+        int radius = Math.max(4, Math.min(25, (int)(vGap * 0.35)));
 
         Point[][] nodePositions = new Point[numLayers][];
-
         int centerY = y + h / 2;
+
         for (int l = 0; l < numLayers; l++) {
             int numNodes = layers[l];
             nodePositions[l] = new Point[numNodes];
-            int vGap = 80;
             int startY = centerY - (numNodes - 1) * vGap / 2;
             for (int n = 0; n < numNodes; n++) {
                 nodePositions[l][n] = new Point(x + l * layerSpacing, startY + n * vGap);
             }
         }
 
+        // --- VERBINDUNGEN (Pfeile) ---
         g.setColor(new Color(60, 60, 60));
         for (int l = 0; l < numLayers - 1; l++) {
             for (int i = 0; i < layers[l]; i++) {
@@ -183,13 +187,18 @@ public class NetworkVisualizer {
                     if (weights != null && weights.length > l && weights[l].length > i && weights[l][i].length > j) {
                         thickness = 0.5f + (float) Math.abs(weights[l][i][j]) * 0.35f;
                     }
-                    thickness = Math.max(0.5f, Math.min(6.0f, thickness));
+                    // Deckelung der Liniendicke: Darf nicht dicker als die halbe Neuronengröße werden
+                    thickness = Math.max(0.5f, Math.min(radius * 0.5f, Math.min(6.0f, thickness)));
                     drawArrow(g, p1.x, p1.y, p2.x, p2.y, radius, thickness);
                 }
             }
         }
 
-        g.setFont(new Font("Serif", Font.ITALIC, 16));
+        // --- NEURONEN (Kreise) ---
+        // Die Schriftgröße schrumpft dynamisch mit dem Radius mit
+        int fontSize = Math.max(9, (int)(radius * 0.65));
+        g.setFont(new Font("Serif", Font.ITALIC, fontSize));
+
         for (int l = 0; l < numLayers; l++) {
             for (int n = 0; n < layers[l]; n++) {
                 Point p = nodePositions[l][n];
@@ -209,28 +218,31 @@ public class NetworkVisualizer {
                 g.fillOval(p.x - radius, p.y - radius, 2 * radius, 2 * radius);
 
                 g.setColor(Color.BLACK);
-                g.setStroke(new BasicStroke(1.5f));
+                // Rahmendicke skaliert minimal mit dem Radius
+                g.setStroke(new BasicStroke(Math.max(0.5f, radius * 0.05f)));
                 g.drawOval(p.x - radius, p.y - radius, 2 * radius, 2 * radius);
 
-                g.setColor(percentBlack > 50 ? Color.WHITE : Color.BLACK);
+                // Beschriftung nur einfügen, wenn die Kreise groß genug sind (Radius >= 10)
+                if (radius >= 10) {
+                    g.setColor(percentBlack > 50 ? Color.WHITE : Color.BLACK);
 
-                FontMetrics fm = g.getFontMetrics();
-                String label = "";
-                if (l == 0) label = "x" + (n + 1);
-                else if (l == numLayers - 1) label = "y" + (layers[l] > 1 ? String.valueOf(n + 1) : "");
+                    FontMetrics fm = g.getFontMetrics();
+                    String label = "";
+                    if (l == 0) label = "x" + (n + 1);
+                    else if (l == numLayers - 1) label = "y" + (layers[l] > 1 ? String.valueOf(n + 1) : "");
 
-                int textX = p.x - fm.stringWidth(label) / 2;
-                int textY = p.y + fm.getAscent() / 2 - 2;
-                g.drawString(label, textX, textY);
+                    int textX = p.x - fm.stringWidth(label) / 2;
+                    int textY = p.y + fm.getAscent() / 2 - 2;
+                    g.drawString(label, textX, textY);
+                }
             }
         }
 
-        // --- ERGEBNIS-TEXT UNTER DEM NETZWERK ---
+        // --- ERGEBNIS-TEXT ---
         g.setFont(new Font("Serif", Font.BOLD, 15));
         g.setColor(Color.BLACK);
         double rate = ((double) correctSamples / totalSamples) * 100.0;
         String accString = String.format(Locale.GERMAN, "Ergebnis: Das Netz erkannte %d aus %d Proben richtig, also mit einer Rate von %.1f Prozent.", correctSamples, totalSamples, rate);
-
         g.drawString(accString, x, y + h + 40);
     }
 
@@ -248,7 +260,8 @@ public class NetworkVisualizer {
         g.drawLine(sx, sy, ex, ey);
 
         double angle = Math.atan2(dy, dx);
-        int arrowSize = Math.max(8, (int) (thickness * 2.5));
+        // Die Pfeilspitze skaliert jetzt auch dynamisch, um bei Mini-Kreisen nicht absurd groß zu wirken
+        int arrowSize = Math.max(4, Math.min(radius, (int) (thickness * 2.5)));
 
         Polygon head = new Polygon();
         head.addPoint(ex, ey);
