@@ -24,7 +24,7 @@ public class App {
         if (args.length > 3) {
             throw new IllegalArgumentException("Zu viele Argumente.");
         }
-        Path file = Path.of(args.length > 0 ? args[0] : "data/xor.csv");
+        Path file = Path.of(args.length > 0 ? args[0] : "data/data_cats_modified.csv");
         String mode = args.length > 1 ? args[1] : "sgd";
         int epochs = args.length > 2 ? Integer.parseInt(args[2]) : 10000;
         if (!mode.equals("sgd") && !mode.equals("momentum") && !mode.equals("adaptive")) {
