@@ -176,4 +176,20 @@ public class FFNeuralNetwork {
     public Layer[] getLayers() {
         return layers;
     }
+
+
+    public void printWeightMatrices() {
+        System.out.println("--- Gewichtsmatrizen ---");
+        for (int l = 1; l < layers.length; l++) {
+            System.out.println("Schicht " + l + " (Zeilen=aktuelle Neuronen, Spalten=Vorgänger + Bias):");
+            double[][] w = layers[l].getWeights();
+            for (int i = 0; i < w.length; i++) {
+                System.out.print("Neuron " + i + ": [");
+                for (int j = 0; j < w[i].length; j++) {
+                    System.out.printf(java.util.Locale.ROOT, "%6.3f ", w[i][j]);
+                }
+                System.out.println("]");
+            }
+        }
+    }
 }
